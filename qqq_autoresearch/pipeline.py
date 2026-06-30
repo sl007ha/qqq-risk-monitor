@@ -6,6 +6,7 @@ from pathlib import Path
 from .candidate import apply_signals
 from .config import get_config
 from .data_sources import download_market_data
+from .feature_inventory import write_all_feature_inventory_outputs
 from .feature_universe_extension import (
     add_feature_universe_data,
     add_feature_universe_features,
@@ -33,6 +34,7 @@ def run_pipeline(output_dir: str | Path = "outputs", config_overrides: dict | No
     write_csv_outputs(work, artifacts, output_dir, config)
     write_dashboard_html(work, artifacts, html_path, config)
     extended_artifacts = write_feature_universe_outputs(work, output_dir, config, html_path)
+    inventory_artifacts = write_all_feature_inventory_outputs(work, output_dir, config, html_path)
 
     latest = work.dropna(subset=["qqq_close"]).iloc[-1]
     summary = {
@@ -46,6 +48,7 @@ def run_pipeline(output_dir: str | Path = "outputs", config_overrides: dict | No
         "credit_source": str(latest["credit_source"]),
         "us10y_source": str(latest["us10y_source"]),
         "feature_count": int(len(extended_artifacts["feature_catalog"])),
+        "all_column_count": int(len(inventory_artifacts["all_feature_inventory"])),
         "sentiment_headline_count": int(len(extended_artifacts["sentiment_headlines"])),
     }
     return summary
