@@ -7,6 +7,7 @@ default at http://localhost:11434.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -21,7 +22,7 @@ class OllamaError(RuntimeError):
 class OllamaClient:
     base_url: str = "http://localhost:11434"
     model: str = "qwen2.5:7b"
-    timeout: int = 600
+    timeout: int = 900
 
     def _url(self, path: str) -> str:
         return self.base_url.rstrip("/") + path
@@ -44,11 +45,33 @@ class OllamaClient:
         temperature: float = 0.2,
         num_ctx: int = 32768,
         keep_alive: str = "10m",
+        stream: bool = True,
     ) -> dict[str, Any]:
+        text = self.generate_text(
+            prompt=prompt,
+            system=system,
+            temperature=temperature,
+            num_ctx=num_ctx,
+            keep_alive=keep_alive,
+            stream=stream,
+        )
+        if not text.strip():
+            raise OllamaError("Ollama returned an empty response.")
+        return self._parse_json_response(text)
+
+    def generate_text(
+        self,
+        prompt: str,
+        system: str | None = None,
+        temperature: float = 0.2,
+        num_ctx: int = 32768,
+        keep_alive: str = "10m",
+        stream: bool = True,
+    ) -> str:
         payload: dict[str, Any] = {
             "model": self.model,
             "prompt": prompt,
-            "stream": False,
+            "stream": bool(stream),
             "format": "json",
             "options": {
                 "temperature": temperature,
@@ -59,22 +82,60 @@ class OllamaClient:
         if system:
             payload["system"] = system
 
+        if stream:
+            return self._generate_text_streaming(payload)
+        return self._generate_text_non_streaming(payload)
+
+    def _generate_text_non_streaming(self, payload: dict[str, Any]) -> str:
+        print(f"Calling Ollama model={self.model} in non-streaming mode...", flush=True)
         try:
-            resp = requests.post(self._url("/api/generate"), json=payload, timeout=self.timeout)
+            resp = requests.post(self._url("/api/generate"), json=payload, timeout=(20, self.timeout))
             resp.raise_for_status()
             data = resp.json()
         except Exception as exc:
             raise OllamaError(f"Ollama /api/generate call failed: {exc}") from exc
+        return data.get("response", "")
 
-        text = data.get("response", "")
-        if not isinstance(text, str) or not text.strip():
-            raise OllamaError("Ollama returned an empty response.")
-
-        return self._parse_json_response(text)
+    def _generate_text_streaming(self, payload: dict[str, Any]) -> str:
+        print(f"Calling Ollama model={self.model} in streaming mode...", flush=True)
+        chunks: list[str] = []
+        chunk_count = 0
+        try:
+            with requests.post(
+                self._url("/api/generate"),
+                json=payload,
+                timeout=(20, self.timeout),
+                stream=True,
+            ) as resp:
+                resp.raise_for_status()
+                for line in resp.iter_lines(decode_unicode=True):
+                    if not line:
+                        continue
+                    try:
+                        item = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if "response" in item and item["response"]:
+                        chunks.append(str(item["response"]))
+                        chunk_count += 1
+                        if chunk_count % 20 == 0:
+                            print(f"  Ollama generated ~{sum(len(c) for c in chunks):,} characters...", flush=True)
+                    if item.get("done"):
+                        break
+        except Exception as exc:
+            raise OllamaError(f"Ollama /api/generate streaming call failed: {exc}") from exc
+        text = "".join(chunks)
+        print(f"Ollama generation finished, received {len(text):,} characters.", flush=True)
+        return text
 
     @staticmethod
     def _parse_json_response(text: str) -> dict[str, Any]:
         text = text.strip()
+        # Qwen-style reasoning models may emit hidden/thinking tags before the JSON.
+        text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE).strip()
+        if text.startswith("```"):
+            text = re.sub(r"^```(?:json)?", "", text.strip(), flags=re.IGNORECASE).strip()
+            text = re.sub(r"```$", "", text.strip()).strip()
         try:
             obj = json.loads(text)
         except json.JSONDecodeError:
