@@ -1,0 +1,43 @@
+name: Research Loop Checks
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  research-loop-checks:
+    name: Research loop guardrails
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python -m pip install pyyaml pandas
+
+      - name: Compile orchestrator scripts
+        run: |
+          python -m py_compile research_loop/run_next_task.py
+          python -m py_compile research_loop/mark_task_result.py
+          python -m py_compile research_loop/validators/validate_no_protected_diff.py
+          python -m py_compile research_loop/validators/validate_no_protected_pr_diff.py
+          python -m py_compile research_loop/validators/validate_feature_snapshot.py
+          python -m py_compile research_loop/validators/validate_task_queue_consistency.py
+
+      - name: Run research-loop guardrail validators
+        run: |
+          python research_loop/validators/validate_no_protected_pr_diff.py --base-ref origin/main
+          python research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_combined
+          python research_loop/validators/validate_task_queue_consistency.py
+          python research_loop/run_next_task.py

@@ -115,6 +115,7 @@ def build_context(
                 "current_iteration": research_state.get("current_iteration"),
                 "last_completed_iteration": research_state.get("last_completed_iteration"),
                 "next_planned_iteration": research_state.get("next_planned_iteration"),
+                "active_feature_snapshot": research_state.get("active_feature_snapshot"),
                 "next_required_action": research_state.get("next_required_action"),
             },
             sort_keys=False,

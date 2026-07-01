@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import shlex
+import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -13,6 +16,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_STATE = REPO_ROOT / "research_loop" / "research_state.yaml"
 DEFAULT_QUEUE = REPO_ROOT / "research_loop" / "task_queue.yaml"
+DEFAULT_REPORT_DIR = REPO_ROOT / "research_loop" / "task_results"
 VALID_STATUSES = {"completed", "failed", "blocked", "needs_patch"}
 
 
@@ -70,6 +74,107 @@ def append_next_task(tasks: list[dict[str, Any]], path: Path) -> str:
     return str(task["task_id"])
 
 
+def repo_path(path: Path) -> Path:
+    return path if path.is_absolute() else REPO_ROOT / path
+
+
+def normalize_validator_command(command: str, base_ref: str) -> list[str]:
+    parts = shlex.split(command)
+    if not parts:
+        raise ValueError("Empty validator command")
+    script = parts[0].replace("\\", "/")
+    if script.endswith(".py"):
+        parts = [sys.executable, *parts]
+    if script.endswith("validate_no_protected_pr_diff.py") and "--base-ref" not in parts:
+        parts.extend(["--base-ref", base_ref])
+    return parts
+
+
+def run_validators(
+    task: dict[str, Any],
+    base_ref: str,
+    report_dir: Path,
+) -> tuple[bool, Path, Path]:
+    validators = [str(item) for item in task.get("validators") or []]
+    task_id = str(task.get("task_id"))
+    task_report_dir = report_dir / task_id
+    task_report_dir.mkdir(parents=True, exist_ok=True)
+    started_at = now_utc()
+    results: list[dict[str, Any]] = []
+
+    for command in validators:
+        argv = normalize_validator_command(command, base_ref)
+        proc = subprocess.run(
+            argv,
+            cwd=REPO_ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        results.append(
+            {
+                "command": command,
+                "argv": argv,
+                "return_code": proc.returncode,
+                "stdout": proc.stdout,
+                "stderr": proc.stderr,
+                "passed": proc.returncode == 0,
+            }
+        )
+
+    all_passed = all(result["passed"] for result in results)
+    report = {
+        "task_id": task_id,
+        "base_ref": base_ref,
+        "started_at_utc": started_at,
+        "finished_at_utc": now_utc(),
+        "validator_count": len(results),
+        "all_passed": all_passed,
+        "results": results,
+    }
+    yaml_path = task_report_dir / "validator_report.yaml"
+    md_path = task_report_dir / "validator_report.md"
+    yaml_path.write_text(yaml.safe_dump(report, sort_keys=False), encoding="utf-8")
+    md_path.write_text(render_validator_markdown(report), encoding="utf-8")
+    return all_passed, yaml_path, md_path
+
+
+def render_validator_markdown(report: dict[str, Any]) -> str:
+    lines = [
+        f"# Validator Report: {report['task_id']}",
+        "",
+        f"- Base ref: `{report['base_ref']}`",
+        f"- Started UTC: {report['started_at_utc']}",
+        f"- Finished UTC: {report['finished_at_utc']}",
+        f"- Validator count: {report['validator_count']}",
+        f"- All passed: {str(report['all_passed']).lower()}",
+        "",
+    ]
+    for index, result in enumerate(report["results"], start=1):
+        lines.extend(
+            [
+                f"## {index}. `{result['command']}`",
+                "",
+                f"- Return code: {result['return_code']}",
+                f"- Passed: {str(result['passed']).lower()}",
+                "",
+                "### stdout",
+                "",
+                "```text",
+                result["stdout"].rstrip(),
+                "```",
+                "",
+                "### stderr",
+                "",
+                "```text",
+                result["stderr"].rstrip(),
+                "```",
+                "",
+            ]
+        )
+    return "\n".join(lines).rstrip() + "\n"
+
+
 def update_research_state(
     state: dict[str, Any],
     task_id: str,
@@ -77,6 +182,7 @@ def update_research_state(
     note: str | None,
     unblocked: list[str],
     appended_task_id: str | None,
+    validator_report: Path | None,
 ) -> None:
     state["as_of"] = datetime.now(timezone.utc).date().isoformat()
     orchestrator = state.setdefault("orchestrator", {})
@@ -92,6 +198,8 @@ def update_research_state(
         event["unblocked_tasks"] = unblocked
     if appended_task_id:
         event["appended_task_id"] = appended_task_id
+    if validator_report:
+        event["validator_report"] = validator_report.relative_to(REPO_ROOT).as_posix()
     history.append(event)
     orchestrator["last_task_result"] = event
     if status in {"failed", "blocked", "needs_patch"}:
@@ -108,6 +216,9 @@ def main() -> int:
     parser.add_argument("--queue", type=Path, default=DEFAULT_QUEUE)
     parser.add_argument("--state", type=Path, default=DEFAULT_STATE)
     parser.add_argument("--append-next-task", type=Path, default=None)
+    parser.add_argument("--run-validators", action="store_true")
+    parser.add_argument("--base-ref", default="origin/main")
+    parser.add_argument("--validator-report-dir", type=Path, default=DEFAULT_REPORT_DIR)
     args = parser.parse_args()
 
     queue = read_yaml(args.queue)
@@ -117,23 +228,61 @@ def main() -> int:
         raise ValueError("task_queue.yaml must contain a list at tasks")
 
     task = find_task(tasks, args.task_id)
-    task["status"] = args.status
+    effective_status = args.status
+    validator_report: Path | None = None
+    validator_report_md: Path | None = None
+
+    if args.status == "completed" and args.run_validators:
+        validators_passed, validator_report, validator_report_md = run_validators(
+            task,
+            args.base_ref,
+            repo_path(args.validator_report_dir),
+        )
+        if not validators_passed:
+            effective_status = "needs_patch"
+            args.note = (args.note + " " if args.note else "") + "Validator failure blocked completion."
+    elif args.status == "completed":
+        print("WARNING: marking completed without --run-validators; validator pass is not implied.")
+
+    task["status"] = effective_status
     task["last_result_at_utc"] = now_utc()
     if args.note:
         task["last_result_note"] = args.note
+    if validator_report:
+        task["last_validator_report"] = validator_report.relative_to(REPO_ROOT).as_posix()
+    if validator_report_md:
+        task["last_validator_report_md"] = validator_report_md.relative_to(REPO_ROOT).as_posix()
 
-    appended_task_id = append_next_task(tasks, args.append_next_task) if args.append_next_task else None
-    unblocked = maybe_unblock_tasks(tasks) if args.status == "completed" else []
-    update_research_state(state, args.task_id, args.status, args.note, unblocked, appended_task_id)
+    appended_task_id = None
+    if args.append_next_task:
+        if effective_status == "completed":
+            appended_task_id = append_next_task(tasks, args.append_next_task)
+        else:
+            print("WARNING: --append-next-task ignored because task did not complete.")
+
+    unblocked = maybe_unblock_tasks(tasks) if effective_status == "completed" else []
+    update_research_state(
+        state,
+        args.task_id,
+        effective_status,
+        args.note,
+        unblocked,
+        appended_task_id,
+        validator_report,
+    )
 
     write_yaml(args.queue, queue)
     write_yaml(args.state, state)
-    print(f"marked {args.task_id} {args.status}")
+    print(f"marked {args.task_id} {effective_status}")
+    if args.status == "completed" and effective_status != "completed":
+        print("completion blocked by validator failure")
+    if validator_report:
+        print(f"validator_report {validator_report.relative_to(REPO_ROOT).as_posix()}")
     if unblocked:
         print("unblocked " + ", ".join(unblocked))
     if appended_task_id:
         print(f"appended {appended_task_id}")
-    return 0
+    return 0 if effective_status == args.status else 1
 
 
 if __name__ == "__main__":

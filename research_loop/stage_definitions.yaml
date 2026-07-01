@@ -17,6 +17,21 @@ global_rules:
   no_production_feature_construction_changes_without_human_approval: true
   evidence_over_claims: true
 
+test_execution_policy:
+  first_stage_allowed_to_run_tests: WALK_FORWARD_TEST
+  stages_before_walk_forward_test_must_not_run_tests:
+    - FEATURE_RESEARCH
+    - FEATURE_FEASIBILITY_AUDIT
+    - FEATURE_LAB_IMPLEMENTATION
+    - FEATURE_LAB_REVIEW
+    - FEATURE_SNAPSHOT_FREEZE
+    - FEATURE_TO_HYPOTHESIS_PLANNING
+    - HYPOTHESIS_VALIDATION
+    - TEST_IMPLEMENTATION
+  dashboard_candidate_stages_must_not_modify_production_files:
+    - DASHBOARD_CANDIDATE
+    - SHADOW_DASHBOARD_EVALUATION
+
 stages:
   FEATURE_RESEARCH:
     objective: Collect evidence-backed feature ideas from research, market mechanisms, dashboard blind spots, and prior failures.
@@ -45,7 +60,8 @@ stages:
       - run_dashboard.py
       - outputs/
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
     next_stage_on_pass: FEATURE_FEASIBILITY_AUDIT
     next_stage_on_fail: FEATURE_RESEARCH
     human_approval_required: false
@@ -74,7 +90,8 @@ stages:
       - qqq_autoresearch/render.py
       - run_dashboard.py
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
     next_stage_on_pass: FEATURE_LAB_IMPLEMENTATION
     next_stage_on_fail: FEATURE_RESEARCH
     human_approval_required: false
@@ -105,7 +122,8 @@ stages:
       - run_dashboard.py
       - outputs/
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
       - research_loop/validators/validate_feature_snapshot.py --snapshot-dir <feature_lab_batch_dir>
     next_stage_on_pass: FEATURE_LAB_REVIEW
     next_stage_on_fail: FEATURE_LAB_IMPLEMENTATION
@@ -134,7 +152,8 @@ stages:
       - run_dashboard.py
       - outputs/
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
       - research_loop/validators/validate_feature_snapshot.py --snapshot-dir <feature_lab_batch_dir>
     next_stage_on_pass: FEATURE_SNAPSHOT_FREEZE
     next_stage_on_fail: FEATURE_LAB_IMPLEMENTATION
@@ -165,7 +184,8 @@ stages:
       - run_dashboard.py
       - outputs/
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
       - research_loop/validators/validate_feature_snapshot.py --snapshot-dir <combined_feature_dir>
     next_stage_on_pass: FEATURE_TO_HYPOTHESIS_PLANNING
     next_stage_on_fail: FEATURE_LAB_REVIEW
@@ -173,6 +193,7 @@ stages:
 
   FEATURE_TO_HYPOTHESIS_PLANNING:
     objective: Convert frozen candidate feature columns into pre-declared hypothesis candidates without running tests.
+    hypothesis_tests_allowed: false
     required_inputs:
       - feature_lab/<combined_id>/experimental_feature_inventory.csv
       - feature_lab/<combined_id>/validation_summary.md
@@ -195,7 +216,8 @@ stages:
       - run_dashboard.py
       - outputs/
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
     next_stage_on_pass: HYPOTHESIS_VALIDATION
     next_stage_on_fail: FEATURE_TO_HYPOTHESIS_PLANNING
     human_approval_required: false
@@ -222,13 +244,15 @@ stages:
       - run_dashboard.py
       - outputs/
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
     next_stage_on_pass: TEST_IMPLEMENTATION
     next_stage_on_fail: FEATURE_TO_HYPOTHESIS_PLANNING
     human_approval_required: false
 
   TEST_IMPLEMENTATION:
     objective: Implement research-only deterministic triggers and walk-forward test scaffolding for validated hypotheses.
+    hypothesis_tests_allowed: false
     required_inputs:
       - research_iterations/<iteration_id>/hypotheses.yaml
       - outputs/*_all_features_daily_wide.csv
@@ -248,13 +272,15 @@ stages:
       - qqq_autoresearch/render.py
       - run_dashboard.py
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
     next_stage_on_pass: WALK_FORWARD_TEST
     next_stage_on_fail: TEST_IMPLEMENTATION
     human_approval_required: false
 
   WALK_FORWARD_TEST:
     objective: Run approved research-only walk-forward tests and write deterministic evidence artifacts.
+    hypothesis_tests_allowed: true
     required_inputs:
       - run_hypothesis_tests_<iteration_id>.py
       - qqq_autoresearch/hypothesis_tests_<iteration_id>.py
@@ -278,7 +304,8 @@ stages:
       - run_dashboard.py
       - dashboard_candidates/
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
       - research_loop/validate_iteration_artifacts.py
     next_stage_on_pass: EVIDENCE_ANALYSIS
     next_stage_on_fail: TEST_IMPLEMENTATION
@@ -306,7 +333,8 @@ stages:
       - qqq_autoresearch/render.py
       - run_dashboard.py
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
     next_stage_on_pass: REGISTRY_UPDATE
     next_stage_on_fail: HYPOTHESIS_VALIDATION
     human_approval_required: false
@@ -334,13 +362,15 @@ stages:
       - qqq_autoresearch/render.py
       - run_dashboard.py
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
     next_stage_on_pass: DASHBOARD_CANDIDATE
     next_stage_on_fail: EVIDENCE_ANALYSIS
     human_approval_required: false
 
   DASHBOARD_CANDIDATE:
     objective: Propose research-backed dashboard candidates without modifying production dashboard files.
+    production_file_changes_allowed: false
     required_inputs:
       - research_iterations/<iteration_id>/analysis.md
       - hypothesis_registry/active_hypotheses.yaml
@@ -360,13 +390,15 @@ stages:
       - qqq_autoresearch/render.py
       - run_dashboard.py
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
     next_stage_on_pass: SHADOW_DASHBOARD_EVALUATION
     next_stage_on_fail: REGISTRY_UPDATE
     human_approval_required: false
 
   SHADOW_DASHBOARD_EVALUATION:
     objective: Evaluate dashboard candidates in a research-only shadow layer before any production proposal.
+    production_file_changes_allowed: false
     required_inputs:
       - dashboard_candidates/<candidate_id>/candidate_manifest.yaml
       - research evidence artifacts
@@ -384,7 +416,8 @@ stages:
       - qqq_autoresearch/render.py
       - run_dashboard.py
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
     next_stage_on_pass: PRODUCTION_PROPOSAL
     next_stage_on_fail: DASHBOARD_CANDIDATE
     human_approval_required: false
@@ -408,7 +441,8 @@ stages:
       - qqq_autoresearch/render.py
       - run_dashboard.py
     validators:
-      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_no_protected_pr_diff.py
+      - research_loop/validators/validate_task_queue_consistency.py
     next_stage_on_pass: null
     next_stage_on_fail: SHADOW_DASHBOARD_EVALUATION
     human_approval_required: true

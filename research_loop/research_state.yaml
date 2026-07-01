@@ -5,6 +5,16 @@ current_iteration: iteration_003
 last_completed_iteration: iteration_003
 next_planned_iteration: iteration_004
 
+active_feature_snapshot:
+  id: FD_001_combined
+  status: frozen_research_snapshot
+  path: feature_lab/FD_001_combined/
+  latest_date: 2026-06-30
+  candidate_hypothesis_columns: 10
+  context_only_columns: 4
+  descriptive_only_columns: 4
+  episode_diagnostics_only_columns: 4
+
 active_hypotheses:
   - hypothesis_id: I002_H001
     status: active_downside_volatility_baseline
@@ -127,6 +137,17 @@ dashboard_candidates:
   human_approval_required_before_production: true
 
 next_required_action:
+  id: FD_001_FEATURE_TO_HYPOTHESIS_PLANNING
+  stage: FEATURE_TO_HYPOTHESIS_PLANNING
+  description: Generate FD_001-derived hypothesis planning artifacts from the frozen combined experimental feature snapshot.
+  must_not_do:
+    - Do not run hypothesis tests.
+    - Do not implement test runners.
+    - Do not modify production dashboard logic.
+    - Do not modify production feature construction.
+    - Do not optimize thresholds.
+
+historical_next_required_action:
   id: iteration_004_design
   description: Run a future iteration_004 research loop using the rewrite queue, after validating iteration_003 artifacts and reviewing this state file.
   must_not_do:
