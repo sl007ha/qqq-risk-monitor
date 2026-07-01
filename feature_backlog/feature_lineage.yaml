@@ -1,0 +1,99 @@
+version: 1
+as_of: 2026-07-01
+purpose: Lineage map linking feature ideas to hypotheses, failures, and preserved lessons.
+
+lineage:
+  - feature_id: FD001_EARLIER_CROSS_ASSET_LEAD_TIME
+    feature_theme: earlier cross-asset lead-time features
+    source_type: prior_iteration_failure
+    source_hypotheses:
+      - hypothesis_id: I002_H002
+        role: baseline_to_preserve
+        evidence_summary: 1.97x lift, 16.04% alert burden, 52.24% event coverage, 11/19 positive-lift folds, 0.0BD median lead.
+      - hypothesis_id: I003_H002
+        role: failed_rewrite
+        evidence_summary: 1.85x lift, 11.70% alert burden, 42.54% event coverage, 8/19 positive-lift folds, 0.0BD median lead.
+    source_files:
+      - research_iterations/iteration_002/analysis.md
+      - research_iterations/iteration_003/analysis.md
+      - research_iterations/iteration_003/decision_log.md
+      - research_loop/research_state.yaml
+    failure_mode: Burden reduction removed useful coverage and stability while failing to create earlier lead time.
+    extracted_feature_need: Separate early credit/rates/dollar deterioration from same-day volatility confirmation.
+    next_gate: proposed_feature
+
+  - feature_id: FD002_EVENT_BASED_REPAIR_QUALITY
+    feature_theme: event-based repair quality features
+    source_type: prior_iteration_failure
+    source_hypotheses:
+      - hypothesis_id: I002_H004
+        role: failed_variant
+        evidence_summary: 0.00x lift, 1.08% alert burden, 0.00% event coverage, 0/19 positive-lift folds.
+      - hypothesis_id: I003_H004
+        role: failed_variant
+        evidence_summary: 0.19x lift, 2.21% alert burden, 0.00% event coverage, 0/19 positive-lift folds.
+    source_files:
+      - research_iterations/iteration_002/analysis.md
+      - research_iterations/iteration_003/analysis.md
+      - research_iterations/iteration_003/decision_log.md
+      - research_loop/research_state.yaml
+    failure_mode: Single-day MMDI repair plus unresolved price damage did not identify future repair-failure events.
+    extracted_feature_need: Describe repair attempts as episodes with bounce quality, reclaim failure, breadth relapse, and repair duration.
+    next_gate: proposed_feature
+
+  - feature_id: FD003_LEADERSHIP_AS_CONTEXT
+    feature_theme: leadership-as-context features
+    source_type: prior_iteration_failure
+    source_hypotheses:
+      - hypothesis_id: I002_H003
+        role: low_burden_baseline
+        evidence_summary: 2.24x lift, 5.16% alert burden, 31.03% event coverage, 6/19 positive-lift folds, 13.5BD median lead.
+      - hypothesis_id: I003_H003
+        role: too_broad_rewrite
+        evidence_summary: 1.55x lift, 23.67% alert burden, 77.59% event coverage, 8/19 positive-lift folds, 3.0BD median lead.
+    source_files:
+      - research_iterations/iteration_002/analysis.md
+      - research_iterations/iteration_003/analysis.md
+      - research_iterations/iteration_003/decision_log.md
+      - research_loop/research_state.yaml
+    failure_mode: Relaxed leadership logic saw many events but was too broad as a standalone alert.
+    extracted_feature_need: Use leadership as a context or confirmation overlay for false-calm and downside-volatility alerts.
+    next_gate: proposed_feature
+
+  - feature_id: FD004_FALSE_CALM_CONFIRMATION
+    feature_theme: false-calm confirmation features
+    source_type: prior_iteration_failure
+    source_hypotheses:
+      - hypothesis_id: I002_H005
+        role: coverage_overlay_predecessor
+        evidence_summary: 1.00x lift, 24.64% alert burden, 62.35% event coverage, 8/19 positive-lift folds, 2.0BD median lead.
+      - hypothesis_id: I003_H005
+        role: active_rewrite_candidate
+        evidence_summary: 1.45x lift, 16.08% alert burden, 67.06% event coverage, 10/19 positive-lift folds, 5.0BD median lead.
+    source_files:
+      - research_iterations/iteration_002/analysis.md
+      - research_iterations/iteration_003/analysis.md
+      - research_iterations/iteration_003/decision_log.md
+      - research_loop/research_state.yaml
+    failure_mode: False-calm coverage improved, but alert burden remains too high for promotion discussion.
+    extracted_feature_need: Add independent confirmation and burden-control features for calm states with internal deterioration.
+    next_gate: proposed_feature
+
+  - feature_id: FD005_DOWNSIDE_VOLATILITY_STABILITY
+    feature_theme: downside-volatility stability features
+    source_type: prior_iteration_failure
+    source_hypotheses:
+      - hypothesis_id: I002_H001
+        role: active_baseline
+        evidence_summary: 2.59x lift, 7.50% alert burden, 40.00% event coverage, 5/19 positive-lift folds, 3.0BD median lead.
+      - hypothesis_id: I003_H001
+        role: comparison_candidate
+        evidence_summary: 2.45x lift, 9.65% alert burden, 40.00% event coverage, 6/19 positive-lift folds, 1.5BD median lead.
+    source_files:
+      - research_iterations/iteration_002/analysis.md
+      - research_iterations/iteration_003/analysis.md
+      - research_iterations/iteration_003/decision_log.md
+      - research_loop/research_state.yaml
+    failure_mode: Fold stability improved only modestly while burden rose and lead time fell.
+    extracted_feature_need: Measure persistence and stability of downside-volatility stress before considering replacement hypotheses.
+    next_gate: proposed_feature

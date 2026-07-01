@@ -1,0 +1,13 @@
+column,dtype,latest_value,latest_non_null,non_null_count,coverage_pct,first_valid_date,last_valid_date
+freq_008_vol_disagreement_score,float64,0.8938492063492064,True,6146,0.8947445042946571,2002-01-25,2026-06-30
+freq_008_vol_disagreement_score_pct,float64,0.9523809523809523,True,6021,0.8765468044839132,2002-07-25,2026-06-30
+freq_008_vol_disagreement_rank_change_20d,float64,0.5912698412698412,True,6001,0.8736351725141942,2002-08-22,2026-06-30
+freq_008_vol_disagreement_flag,float64,1.0,True,6021,0.8765468044839132,2002-07-25,2026-06-30
+freq_007_vol_term_daily_stress_count,float64,1.0,True,3895,0.5670403261027807,2011-01-03,2026-06-30
+freq_007_vol_term_stress_persistence_5d,float64,0.2,True,3891,0.5664579997088368,2011-01-07,2026-06-30
+freq_007_vol_term_stress_persistence_20d,float64,0.35,True,3876,0.5642742757315475,2011-01-31,2026-06-30
+freq_007_vol_term_persistent_stress_flag,float64,0.0,True,3876,0.5642742757315475,2011-01-31,2026-06-30
+freq_010_safe_haven_confirmation_score,float64,1.0,True,5958,0.8673751637792982,2002-10-23,2026-06-30
+freq_010_rates_led_stress_flag,float64,0.0,True,5958,0.8673751637792982,2002-10-23,2026-06-30
+freq_010_riskoff_confirmation_flag,float64,1.0,True,5958,0.8673751637792982,2002-10-23,2026-06-30
+freq_010_safe_haven_rotation_state,object,riskoff_confirmed,True,5958,0.8673751637792982,2002-10-23,2026-06-30

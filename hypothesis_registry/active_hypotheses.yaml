@@ -1,10 +1,11 @@
 version: 1
 as_of: 2026-07-01
 source:
-  iteration: iteration_003
+  iteration: iteration_004_fd001
   files:
-    - research_iterations/iteration_003/decision_log.md
-    - research_iterations/iteration_003/next_iteration_plan.md
+    - research_iterations/iteration_004_fd001/decision_log.md
+    - research_iterations/iteration_004_fd001/decision_log.yaml
+    - research_iterations/iteration_004_fd001/next_iteration_plan.md
 
 active_hypotheses:
   - hypothesis_id: I002_H001
@@ -54,3 +55,17 @@ active_hypotheses:
       positive_lift_folds: "10/19"
       median_lead_bd: 5.0
     role_next_iteration: Reduce burden with pre-declared second-stage confirmation.
+
+  - hypothesis_id: FD001_H002_VOL_TERM_PERSISTENT_ACUTE_STRESS
+    label: fd001_vol_term_persistence_rewrite_candidate
+    status: active_rewrite_candidate
+    source_iteration: iteration_004_fd001
+    parent_feature_snapshot_id: FD_001_combined
+    parent_hypothesis_or_rewrite_queue_item: RQ004_DOWNSIDE_VOL_COMPARISON
+    evidence:
+      base_rate_lift: 1.4612335414824227
+      alert_burden: 0.17393548387096774
+      event_coverage: 0.6605504587155964
+      positive_lift_folds: "8/19"
+      median_lead_bd: 1.0
+    role_next_iteration: Rewrite to reduce burden and improve fold stability before any shadow dashboard consideration.

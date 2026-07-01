@@ -1,0 +1,35 @@
+version: 1
+as_of: 2026-07-01
+purpose: Research artifact storage policy for Codex Research Orchestrator workflows.
+
+commit_by_default:
+  - source_scripts
+  - yaml_manifests
+  - inventory_summaries
+  - coverage_summaries
+  - validation_summaries
+  - next_step_recommendation_md
+  - small_audit_files
+  - prompt_templates
+  - reviewers
+  - validators
+
+do_not_commit_by_default:
+  - large_regenerated_daily_snapshots
+  - repeated_intermediate_batch_snapshots_when_combined_snapshot_exists
+  - raw_production_outputs
+  - temporary_codex_scratch_files
+  - api_keys_or_secrets
+
+current_pr_policy:
+  delete_existing_artifacts: false
+  rationale: >
+    FD_001 artifacts are already part of the draft PR baseline. This hardening
+    patch preserves them for reproducibility and adds cleanup guidance instead
+    of deleting research artifacts mid-review.
+
+future_recommendations:
+  - consider keeping only FD_001_combined full snapshot, or only manifest plus checksum, after the first merged baseline
+  - consider moving future large snapshots to GitHub Actions artifacts or local outputs
+  - consider adding future .gitignore rules for generated large snapshots after deciding storage policy
+  - keep validator, manifest, inventory, coverage, and summary files in git whenever they are small enough for review

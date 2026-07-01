@@ -1,0 +1,35 @@
+version: 1
+batch_id: FD_001_batch_B_v2
+generated_at_utc: '2026-07-01T06:44:18+00:00'
+input_file: outputs\qqq_r2_mmdi_v1_3_1_all_features_daily_wide.csv
+output_directory: feature_lab\FD_001_batch_B_v2
+production_files_modified: false
+production_outputs_written: false
+hypothesis_tests_run: false
+features:
+  FREQ_003:
+    title: False-calm internal deterioration count
+    output_columns:
+    - freq_003_quiet_state
+    - freq_003_false_calm_internal_deterioration_count
+    - freq_003_false_calm_missing_component_count
+    - freq_003_false_calm_confirmed_flag
+    - freq_003_false_calm_possible_flag
+    - freq_003_false_calm_unknown_due_to_missing_flag
+    qa_patch_note: Single binary flag replaced with confirmed, possible, and unknown-due-to-missing
+      flags.
+  FREQ_004:
+    title: Repair episode quality score
+    output_columns:
+    - freq_004_repair_episode_active
+    - freq_004_repair_failure_pressure_count
+    - freq_004_repair_episode_quality_score
+    - freq_004_repair_relapse_flag
+    status: episode_diagnostics_only
+    formula_note: Unchanged from Batch B.
+artifacts:
+- experimental_feature_snapshot.csv
+- experimental_feature_inventory.csv
+- coverage_summary.csv
+- validation_summary.md
+- feature_snapshot_manifest.yaml

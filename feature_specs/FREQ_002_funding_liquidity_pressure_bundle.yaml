@@ -1,0 +1,63 @@
+version: 1
+feature_id: FREQ_002
+title: Funding liquidity pressure bundle
+status: proposed_feature
+source_type: market_mechanism
+source_references:
+  - feature_research/FD_001/extracted_feature_ideas.yaml
+  - https://www.bis.org/publ/work1250.htm
+  - https://www.financialresearch.gov/financial-stress-index/
+source_hypotheses:
+  - I002_H002
+  - I003_H005
+
+economic_mechanism: Funding stress, tighter financial conditions, and credit pressure can force deleveraging and reduce risk appetite before QQQ drawdowns.
+raw_inputs:
+  - nfci
+  - sofr_spread_proxy
+  - fedfunds
+  - credit_spread
+  - hy_ig_spread
+  - liquidity_regime
+formula: Percentile-rank funding and credit pressure inputs on a trailing training window. The bundle rises when at least two funding/liquidity families deteriorate simultaneously.
+data_source: Current FRED-derived exported feature inventory.
+expected_direction: Higher funding pressure should increase future path-risk and acute-shock probability.
+candidate_hypothesis_use: Cross-asset stress confirmation and false-calm burden reduction.
+point_in_time_risk: Medium. FRED data may have release lags, revisions, and post-hoc availability differences.
+leakage_risks:
+  - Use only values available on or before the signal date after release-lag handling.
+  - Do not backfill future revisions into historical signals without documenting the limitation.
+redundancy_check:
+  inventory_file: outputs/qqq_r2_mmdi_v1_3_1_all_feature_inventory.csv
+  related_existing_columns:
+    - nfci
+    - sofr_spread_proxy
+    - credit_spread
+    - hy_ig_spread
+    - liquidity_regime
+  result: partially_redundant
+  notes: Inputs exist individually; a combined funding-pressure bundle is not currently present.
+coverage_requirement:
+  minimum_start_date: 2018-04-03
+  minimum_non_null_fraction: 0.60
+  minimum_event_coverage_review: required
+implementation_plan:
+  allowed_location: feature_lab/FREQ_002_funding_liquidity_pressure_bundle/
+  production_files_touched: []
+  experimental_outputs:
+    - feature_lab/FREQ_002_funding_liquidity_pressure_bundle/outputs/experimental_feature_snapshot.csv
+validation_plan:
+  - Audit coverage of SOFR and NFCI fields.
+  - Check whether BAA10Y fallback changes feature interpretation.
+  - Document release-lag assumptions.
+classification:
+  historical_use: research_only
+  live_sentiment_or_headline: false
+  point_in_time_archive_required: false
+implementation_complexity: medium
+production_promotion_status:
+  allowed_without_human_approval: false
+  human_approval_required_for:
+    - production feature construction
+    - dashboard integration
+    - protected file edits

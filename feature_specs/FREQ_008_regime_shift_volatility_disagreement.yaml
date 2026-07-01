@@ -1,0 +1,66 @@
+version: 1
+feature_id: FREQ_008
+title: Regime-shift volatility disagreement
+status: proposed_feature
+source_type: research_source
+source_references:
+  - feature_research/FD_001/extracted_feature_ideas.yaml
+  - https://www.federalreserve.gov/econres/feds/linear-and-nonlinear-econometric-models-against-machine-learning-models.htm
+  - https://arxiv.org/html/2603.10299v1
+source_hypotheses:
+  - I002_H001
+  - I003_H001
+  - I003_H005
+
+economic_mechanism: Abrupt volatility-regime changes can make simple extrapolation unreliable. Disagreement between short realized, long realized, and implied volatility proxies may mark unstable regimes.
+raw_inputs:
+  - qqq_vol_10d
+  - qqq_vol_20d
+  - qqq_vol_60d
+  - realized_vol_252d
+  - vix
+  - vxn
+  - vol_20d_vs_252d
+formula: Compare short realized volatility, medium realized volatility, long realized volatility, and implied-vol proxies; score widening disagreement and abrupt percentile-rank changes.
+data_source: Current exported feature inventory.
+expected_direction: Higher disagreement should imply higher path-risk and regime-shift risk.
+candidate_hypothesis_use: Downside-volatility stability comparison and false-calm confirmation.
+point_in_time_risk: Low. Inputs are market-derived trailing or same-day close values.
+leakage_risks:
+  - Use only historical ranks computed within training windows.
+  - Do not use future volatility or future drawdown outcomes to define disagreement.
+redundancy_check:
+  inventory_file: outputs/qqq_r2_mmdi_v1_3_1_all_feature_inventory.csv
+  related_existing_columns:
+    - qqq_vol_20d
+    - qqq_vol_60d
+    - realized_vol_252d
+    - vix
+    - vxn
+    - vol_20d_vs_252d
+  result: distinct
+  notes: Existing ratios compare some horizons; a multi-proxy disagreement score is not present.
+coverage_requirement:
+  minimum_start_date: 2001-01-23
+  minimum_non_null_fraction: 0.80
+  minimum_event_coverage_review: required
+implementation_plan:
+  allowed_location: feature_lab/FREQ_008_regime_shift_volatility_disagreement/
+  production_files_touched: []
+  experimental_outputs:
+    - feature_lab/FREQ_008_regime_shift_volatility_disagreement/outputs/experimental_feature_snapshot.csv
+validation_plan:
+  - Report coverage after VXN start date.
+  - Compare to vol_20d_vs_252d redundancy.
+  - Document training-window rank computation.
+classification:
+  historical_use: research_only
+  live_sentiment_or_headline: false
+  point_in_time_archive_required: false
+implementation_complexity: low
+production_promotion_status:
+  allowed_without_human_approval: false
+  human_approval_required_for:
+    - production feature construction
+    - dashboard integration
+    - protected file edits

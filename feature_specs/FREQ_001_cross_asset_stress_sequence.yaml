@@ -1,0 +1,65 @@
+version: 1
+feature_id: FREQ_001
+title: Cross-asset stress sequence score
+status: proposed_feature
+source_type: prior_iteration_failure
+source_references:
+  - feature_research/FD_001/extracted_feature_ideas.yaml
+  - feature_backlog/feature_requests_from_hypotheses.yaml
+  - research_iterations/iteration_003/analysis.md
+  - https://www.bis.org/publ/work1250.htm
+source_hypotheses:
+  - I002_H002
+  - I003_H002
+
+economic_mechanism: Stress that begins in credit, rates, dollar, or volatility markets may lead QQQ price damage. A sequence score tests whether non-equity deterioration precedes equity drawdown acceleration.
+raw_inputs:
+  - credit_spread_20d_change
+  - ig_oas_change_20d
+  - ust10y_change_20d
+  - dxy_change_20d
+  - vix_change_20d
+  - vix9d_vs_vix
+formula: Count credit, rates, dollar, and volatility stress flags using pre-declared training-window quantiles or fixed economic signs. Add one point if at least two non-equity families deteriorate before qqq_dd_20d or drawdown_speed_20d deteriorates.
+data_source: Current exported feature inventory and all-features daily wide CSV.
+expected_direction: Higher sequence score should indicate higher future acute-shock risk and better lead time than same-day stress confirmation.
+candidate_hypothesis_use: Rewrite cross-asset acute-shock hypotheses while preserving I002_H002 as baseline.
+point_in_time_risk: Medium. Market data are date-local, but FRED-derived credit and rates fields require release-lag and revision review before historical use.
+leakage_risks:
+  - Do not use future drawdown to define the sequence.
+  - Compute all stress flags from trailing data available as of each date.
+  - Document FRED release timing if using macro fields in historical tests.
+redundancy_check:
+  inventory_file: outputs/qqq_r2_mmdi_v1_3_1_all_feature_inventory.csv
+  related_existing_columns:
+    - credit_spread_20d_change
+    - ig_oas_change_20d
+    - ust10y_change_20d
+    - dxy_change_20d
+    - vix_change_20d
+  result: partially_redundant
+  notes: Individual changes exist, but cross-family ordering and lead sequence are not represented as a feature.
+coverage_requirement:
+  minimum_start_date: 2008-01-02
+  minimum_non_null_fraction: 0.60
+  minimum_event_coverage_review: required
+implementation_plan:
+  allowed_location: feature_lab/FREQ_001_cross_asset_stress_sequence/
+  production_files_touched: []
+  experimental_outputs:
+    - feature_lab/FREQ_001_cross_asset_stress_sequence/outputs/experimental_feature_snapshot.csv
+validation_plan:
+  - Verify first/latest valid date and non-null coverage for each raw input.
+  - Compare redundancy versus current stress and change columns.
+  - Confirm the sequence flag never uses future QQQ drawdown information.
+classification:
+  historical_use: research_only
+  live_sentiment_or_headline: false
+  point_in_time_archive_required: false
+implementation_complexity: medium
+production_promotion_status:
+  allowed_without_human_approval: false
+  human_approval_required_for:
+    - production feature construction
+    - dashboard integration
+    - protected file edits

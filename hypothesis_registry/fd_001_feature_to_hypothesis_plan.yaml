@@ -1,0 +1,243 @@
+version: 1
+plan_id: FD_001_FEATURE_TO_HYPOTHESIS_PLAN
+created_for_iteration: iteration_004_fd001
+parent_feature_snapshot_id: FD_001_combined
+parent_feature_snapshot_path: feature_lab/FD_001_combined/
+notes:
+  - Research-only planning artifact.
+  - Thresholds are pre-declared and must not be optimized.
+  - Context-only and diagnostics-only columns are not standalone triggers.
+hypotheses:
+  - hypothesis_id: FD001_H001_FALSE_CALM_CONFIRMED_DOWNSIDE
+    parent_feature_snapshot_id: FD_001_combined
+    source_feature_columns:
+      - freq_003_false_calm_confirmed_flag
+      - freq_003_false_calm_internal_deterioration_count
+    context_columns:
+      - freq_010_safe_haven_confirmation_score
+      - freq_010_riskoff_confirmation_flag
+      - freq_010_safe_haven_rotation_state
+    descriptive_columns:
+      - freq_003_quiet_state
+      - freq_003_false_calm_missing_component_count
+      - freq_003_false_calm_unknown_due_to_missing_flag
+    diagnostics_columns:
+      - freq_004_repair_episode_active
+      - freq_004_repair_failure_pressure_count
+    parent_hypothesis_or_rewrite_queue_item: RQ004_FALSE_CALM_BURDEN_REDUCTION
+    economic_mechanism: >
+      A quiet R2 state with confirmed internal deterioration indicates that the
+      dashboard may be under-reporting accumulating downside pressure. Confirmed
+      deterioration should raise near-term drawdown risk while reducing burden
+      versus broader false-calm triggers.
+    target:
+      horizon_bd: 30
+      event_definition: Future 30-business-day QQQ maximum drawdown is less than or equal to -8%.
+      threshold: -0.08
+    trigger_rule:
+      deterministic_formula: >
+        freq_003_false_calm_confirmed_flag == 1 and
+        freq_003_false_calm_internal_deterioration_count >= 3
+      thresholds_predeclared:
+        freq_003_false_calm_confirmed_flag: 1
+        freq_003_false_calm_internal_deterioration_count: 3
+      no_threshold_optimization: true
+    expected_direction: Triggered days should have higher 30BD drawdown event probability than the base rate.
+    validation_plan:
+      walk_forward_design: Expanding yearly walk-forward folds with a minimum eight-year training history.
+      purging_embargo_assumptions: Purge each training fold by the target horizon before the test year.
+      metrics:
+        - alert burden
+        - base hit rate
+        - alert hit rate
+        - lift
+        - event coverage
+        - false calm reduction
+        - fold stability
+        - median lead time
+    sample_and_coverage_caveats: Confirmed false-calm rows exclude ambiguous missingness rows; descriptive missingness columns must be reviewed in analysis.
+    why_not_duplicate_of_rejected_hypothesis: >
+      Unlike I003_H005, this uses the FD_001 confirmed false-calm feature as a
+      prebuilt deterioration count and avoids broad independent confirmations
+      that created high burden.
+    dashboard_relevance: Candidate low-burden false-calm overlay if evidence improves burden while preserving event coverage.
+    not_to_do:
+      - do not use context-only as standalone trigger
+      - do not use diagnostics-only as direct trigger
+      - do not use live sentiment historically
+      - do not use future labels
+
+  - hypothesis_id: FD001_H002_VOL_TERM_PERSISTENT_ACUTE_STRESS
+    parent_feature_snapshot_id: FD_001_combined
+    source_feature_columns:
+      - freq_007_vol_term_daily_stress_count
+      - freq_007_vol_term_stress_persistence_5d
+      - freq_007_vol_term_stress_persistence_20d
+    context_columns:
+      - freq_010_safe_haven_confirmation_score
+      - freq_010_rates_led_stress_flag
+      - freq_010_riskoff_confirmation_flag
+    descriptive_columns:
+      - freq_007_vol_term_persistent_stress_flag
+    diagnostics_columns:
+      - freq_004_repair_episode_active
+    parent_hypothesis_or_rewrite_queue_item: RQ004_DOWNSIDE_VOL_COMPARISON
+    economic_mechanism: >
+      Persistent front-end volatility term stress can signal acute hedging
+      demand and unstable risk appetite before short-horizon drawdowns.
+    target:
+      horizon_bd: 15
+      event_definition: Future 15-business-day QQQ maximum drawdown is less than or equal to -5%.
+      threshold: -0.05
+    trigger_rule:
+      deterministic_formula: >
+        freq_007_vol_term_daily_stress_count >= 2 and
+        freq_007_vol_term_stress_persistence_5d >= 0.60 and
+        freq_007_vol_term_stress_persistence_20d >= 0.35
+      thresholds_predeclared:
+        freq_007_vol_term_daily_stress_count: 2
+        freq_007_vol_term_stress_persistence_5d: 0.60
+        freq_007_vol_term_stress_persistence_20d: 0.35
+      no_threshold_optimization: true
+    expected_direction: Triggered days should show higher 15BD acute drawdown hit rate and event coverage than the base rate.
+    validation_plan:
+      walk_forward_design: Expanding yearly walk-forward folds with a minimum eight-year training history.
+      purging_embargo_assumptions: Purge each training fold by the target horizon before the test year.
+      metrics:
+        - alert burden
+        - base hit rate
+        - alert hit rate
+        - lift
+        - event coverage
+        - false calm reduction
+        - fold stability
+        - median lead time
+    sample_and_coverage_caveats: VIX9D-era coverage starts later than full QQQ history, so sample size and recent-regime concentration must be reviewed.
+    why_not_duplicate_of_rejected_hypothesis: >
+      This is not the rejected false-repair or leadership standalone structure;
+      it tests a new FD_001 volatility term persistence surface.
+    dashboard_relevance: Potential acute-shock context or alert candidate if burden remains acceptable and fold evidence is stable.
+    not_to_do:
+      - do not use context-only as standalone trigger
+      - do not use diagnostics-only as direct trigger
+      - do not use live sentiment historically
+      - do not use future labels
+
+  - hypothesis_id: FD001_H003_VOL_DISAGREEMENT_REGIME_SHIFT
+    parent_feature_snapshot_id: FD_001_combined
+    source_feature_columns:
+      - freq_008_vol_disagreement_score_pct
+      - freq_008_vol_disagreement_rank_change_20d
+      - freq_008_vol_disagreement_flag
+    context_columns:
+      - freq_010_safe_haven_confirmation_score
+      - freq_010_safe_haven_rotation_state
+    descriptive_columns:
+      - freq_007_vol_term_persistent_stress_flag
+    diagnostics_columns:
+      - freq_004_repair_episode_active
+      - freq_004_repair_episode_quality_score
+    parent_hypothesis_or_rewrite_queue_item: RQ004_DOWNSIDE_VOL_COMPARISON
+    economic_mechanism: >
+      Large disagreement between volatility components can indicate a regime
+      transition where risk pricing is unstable before price damage fully
+      appears.
+    target:
+      horizon_bd: 30
+      event_definition: Future 30-business-day QQQ maximum drawdown is less than or equal to -8%.
+      threshold: -0.08
+    trigger_rule:
+      deterministic_formula: >
+        freq_008_vol_disagreement_flag == 1 and
+        freq_008_vol_disagreement_score_pct >= 0.90 and
+        freq_008_vol_disagreement_rank_change_20d >= 0.50
+      thresholds_predeclared:
+        freq_008_vol_disagreement_flag: 1
+        freq_008_vol_disagreement_score_pct: 0.90
+        freq_008_vol_disagreement_rank_change_20d: 0.50
+      no_threshold_optimization: true
+    expected_direction: Triggered days should precede higher 30BD path-risk events and improve lead time versus broad volatility triggers.
+    validation_plan:
+      walk_forward_design: Expanding yearly walk-forward folds with a minimum eight-year training history.
+      purging_embargo_assumptions: Purge each training fold by the target horizon before the test year.
+      metrics:
+        - alert burden
+        - base hit rate
+        - alert hit rate
+        - lift
+        - event coverage
+        - false calm reduction
+        - fold stability
+        - median lead time
+    sample_and_coverage_caveats: Rolling percentile history reduces early-sample coverage; analysis must identify whether results are concentrated after 2002.
+    why_not_duplicate_of_rejected_hypothesis: >
+      This tests FD_001 volatility disagreement, not the rejected I003_H002
+      cross-asset burden reduction or I003_H003 leadership standalone trigger.
+    dashboard_relevance: Candidate path-risk overlay if it improves lead time without excessive alert burden.
+    not_to_do:
+      - do not use context-only as standalone trigger
+      - do not use diagnostics-only as direct trigger
+      - do not use live sentiment historically
+      - do not use future labels
+
+  - hypothesis_id: FD001_H004_FALSE_CALM_VOL_DISAGREEMENT_CONFIRMATION
+    parent_feature_snapshot_id: FD_001_combined
+    source_feature_columns:
+      - freq_003_false_calm_possible_flag
+      - freq_003_false_calm_internal_deterioration_count
+      - freq_008_vol_disagreement_score_pct
+    context_columns:
+      - freq_010_safe_haven_confirmation_score
+      - freq_010_riskoff_confirmation_flag
+      - freq_010_safe_haven_rotation_state
+    descriptive_columns:
+      - freq_003_quiet_state
+      - freq_003_false_calm_missing_component_count
+      - freq_003_false_calm_unknown_due_to_missing_flag
+    diagnostics_columns:
+      - freq_004_repair_episode_active
+      - freq_004_repair_failure_pressure_count
+      - freq_004_repair_relapse_flag
+    parent_hypothesis_or_rewrite_queue_item: RQ004_FALSE_CALM_BURDEN_REDUCTION
+    economic_mechanism: >
+      Ambiguous or confirmed false-calm deterioration becomes more actionable
+      when volatility disagreement is already elevated, suggesting hidden
+      internal stress plus unstable risk pricing.
+    target:
+      horizon_bd: 30
+      event_definition: Future 30-business-day QQQ maximum drawdown is less than or equal to -8%.
+      threshold: -0.08
+    trigger_rule:
+      deterministic_formula: >
+        freq_003_false_calm_possible_flag == 1 and
+        freq_003_false_calm_internal_deterioration_count >= 2 and
+        freq_008_vol_disagreement_score_pct >= 0.85
+      thresholds_predeclared:
+        freq_003_false_calm_possible_flag: 1
+        freq_003_false_calm_internal_deterioration_count: 2
+        freq_008_vol_disagreement_score_pct: 0.85
+      no_threshold_optimization: true
+    expected_direction: Triggered days should reduce false-calm misses while keeping burden below the broad I003_H005 false-calm rewrite.
+    validation_plan:
+      walk_forward_design: Expanding yearly walk-forward folds with a minimum eight-year training history.
+      purging_embargo_assumptions: Purge each training fold by the target horizon before the test year.
+      metrics:
+        - alert burden
+        - base hit rate
+        - alert hit rate
+        - lift
+        - event coverage
+        - false calm reduction
+        - fold stability
+        - median lead time
+    sample_and_coverage_caveats: Possible false-calm includes ambiguous missingness rows, so the missing component count and unknown flag must be analyzed as caveats.
+    why_not_duplicate_of_rejected_hypothesis: >
+      This differs from I003_H005 by requiring FD_001 volatility-disagreement
+      confirmation and preserving missingness as uncertainty rather than as a
+      direct stress signal.
+    dashboard_relevance: Candidate false-calm confirmation rule if it improves event coverage without high alert burden.
+    not_to_do:
+      - do not use context-only as standalone trigger
+      - do not use diagnostics-only as direct trigger
+      - do not use live sentiment historically
+      - do not use future labels

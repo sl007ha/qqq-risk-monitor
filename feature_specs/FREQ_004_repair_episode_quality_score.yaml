@@ -1,0 +1,67 @@
+version: 1
+feature_id: FREQ_004
+title: Repair episode quality score
+status: proposed_feature
+source_type: prior_iteration_failure
+source_references:
+  - feature_research/FD_001/extracted_feature_ideas.yaml
+  - feature_backlog/feature_requests_from_hypotheses.yaml
+  - research_iterations/iteration_003/analysis.md
+  - research_iterations/iteration_003/decision_log.md
+source_hypotheses:
+  - I002_H004
+  - I003_H004
+
+economic_mechanism: False repair may require episode-level state, because single-day MMDI repair plus unresolved damage failed to identify future repair-failure events.
+raw_inputs:
+  - qqq_close
+  - qqq_dd_20d
+  - qqq_dd_60d
+  - rebound_from_trough_20d
+  - failed_reclaim_ma50
+  - failed_reclaim_ma200
+  - lower_high_flag
+  - lower_low_flag
+  - mmdi_low_after_high
+formula: After a drawdown episode, score the repair window using bounce retracement, failed moving-average reclaims, lower-high/lower-low sequence flags, and MMDI relapse.
+data_source: Current exported feature inventory.
+expected_direction: Lower repair quality should imply higher repair-failure and path-risk probability.
+candidate_hypothesis_use: Only revisit false repair with this episode feature or a changed target definition.
+point_in_time_risk: Low. Inputs are trailing price and MMDI fields.
+leakage_risks:
+  - Define episode start and repair window using only past and current prices.
+  - Do not use future event outcome to terminate or score the episode.
+redundancy_check:
+  inventory_file: outputs/qqq_r2_mmdi_v1_3_1_all_feature_inventory.csv
+  related_existing_columns:
+    - failed_reclaim_ma50
+    - failed_reclaim_ma200
+    - lower_high_flag
+    - lower_low_flag
+    - rebound_from_trough_20d
+  result: partially_redundant
+  notes: Daily flags exist, but repair-window aggregation and episode quality are new.
+coverage_requirement:
+  minimum_start_date: 2008-01-02
+  minimum_non_null_fraction: 0.75
+  minimum_event_coverage_review: required
+implementation_plan:
+  allowed_location: feature_lab/FREQ_004_repair_episode_quality_score/
+  production_files_touched: []
+  experimental_outputs:
+    - feature_lab/FREQ_004_repair_episode_quality_score/outputs/experimental_feature_snapshot.csv
+validation_plan:
+  - Check that repair episodes are reproducible from trailing data.
+  - Report episode count, average duration, and missingness.
+  - Confirm no future drawdown target is used in feature construction.
+classification:
+  historical_use: research_only
+  live_sentiment_or_headline: false
+  point_in_time_archive_required: false
+implementation_complexity: medium
+production_promotion_status:
+  allowed_without_human_approval: false
+  human_approval_required_for:
+    - production feature construction
+    - dashboard integration
+    - protected file edits

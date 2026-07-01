@@ -1,0 +1,50 @@
+version: 1
+iteration_id: iteration_004_fd001
+parent_feature_snapshot_id: FD_001_combined
+decisions:
+  - hypothesis_id: FD001_H002_VOL_TERM_PERSISTENT_ACUTE_STRESS
+    decision: keep_for_rewrite
+    evidence:
+      base_rate_lift: 1.4612335414824227
+      alert_burden: 0.17393548387096774
+      event_coverage: 0.6605504587155964
+      positive_lift_folds: "8/19"
+      median_lead_time_bd: 1.0
+    rationale: Strongest aggregate lift and coverage, but too high burden and insufficient fold stability for dashboard candidacy.
+    next_action: Rewrite to reduce burden, possibly by using volatility disagreement or defensive context only as confirmation.
+  - hypothesis_id: FD001_H003_VOL_DISAGREEMENT_REGIME_SHIFT
+    decision: rewrite_as_context
+    evidence:
+      base_rate_lift: 1.0810090824572696
+      alert_burden: 0.050741775962158675
+      event_coverage: 0.3176470588235294
+      positive_lift_folds: "4/19"
+      median_lead_time_bd: 10.0
+    rationale: Low burden and lead time are useful, but lift and fold stability are too weak.
+    next_action: Use as context or confirmation overlay only.
+  - hypothesis_id: FD001_H004_FALSE_CALM_VOL_DISAGREEMENT_CONFIRMATION
+    decision: drop_as_direct_trigger
+    evidence:
+      base_rate_lift: 0.8721987810595405
+      alert_burden: 0.02257579015265534
+      event_coverage: 0.17647058823529413
+      positive_lift_folds: "4/19"
+      median_lead_time_bd: 12.0
+    rationale: Sub-base lift and low event coverage despite low burden and longer lead.
+    next_action: Preserve as lesson for false-calm rewrite design; do not retest directly without a changed target or trigger structure.
+  - hypothesis_id: FD001_H001_FALSE_CALM_CONFIRMED_DOWNSIDE
+    decision: drop_as_direct_trigger
+    evidence:
+      base_rate_lift: 0.8025139574660342
+      alert_burden: 0.13933849401829698
+      event_coverage: 0.4878048780487805
+      positive_lift_folds: "7/19"
+      median_lead_time_bd: 3.0
+    rationale: Confirmed false-calm deterioration did not increase hit rate and carried high burden.
+    next_action: Do not promote as direct alert; revisit false-calm only with a different target or second-stage design.
+shadow_dashboard_candidate:
+  decision: no_candidate
+  reason: No hypothesis passed combined lift, burden, fold-stability, and lead-time gates.
+production_proposal:
+  decision: not_allowed
+  reason: This run is research-only and production promotion remains human-approval-gated.

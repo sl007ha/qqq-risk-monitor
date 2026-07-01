@@ -1,0 +1,74 @@
+name: Research Loop Checks
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  research-loop-checks:
+    name: Research loop guardrails
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python -m pip install pyyaml pandas
+
+      - name: Compile orchestrator scripts
+        run: |
+          python -m py_compile research_loop/run_next_task.py
+          python -m py_compile research_loop/mark_task_result.py
+          python -m py_compile research_loop/validators/validate_no_protected_diff.py
+          python -m py_compile research_loop/validators/validate_no_protected_pr_diff.py
+          python -m py_compile research_loop/validators/validate_feature_snapshot.py
+          python -m py_compile research_loop/validators/validate_hypothesis_plan.py
+          python -m py_compile research_loop/validators/validate_task_queue_consistency.py
+          python -m py_compile research_loop/validators/validate_task_outputs.py
+
+      - name: Run research-loop guardrail validators
+        run: |
+          python research_loop/validators/validate_no_protected_pr_diff.py --base-ref origin/main
+          python research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_combined
+          python research_loop/validators/validate_task_queue_consistency.py
+          python - <<'PY'
+          import subprocess
+          import yaml
+
+          with open("research_loop/task_queue.yaml", "r", encoding="utf-8") as f:
+              queue = yaml.safe_load(f) or {}
+
+          tasks = queue.get("tasks", [])
+          completed = {task.get("task_id") for task in tasks if task.get("status") == "completed"}
+          ready = [
+              task
+              for task in tasks
+              if task.get("status") == "ready"
+              and all(dep in completed for dep in task.get("blocked_by", []))
+          ]
+
+          if ready:
+              subprocess.check_call(["python", "research_loop/run_next_task.py"])
+          else:
+              print("Skipping run_next_task.py because no ready research-loop task exists.")
+          PY
+
+      - name: Run hypothesis plan validator when plan exists
+        run: |
+          if [ -f hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml ]; then
+            python research_loop/validators/validate_hypothesis_plan.py --plan-yaml hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml --snapshot-dir feature_lab/FD_001_combined
+            python research_loop/validators/validate_task_outputs.py --task-id FD_001_FEATURE_TO_HYPOTHESIS_PLANNING
+          else
+            echo "Skipping hypothesis plan and task output validators because hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml does not exist yet."
+          fi

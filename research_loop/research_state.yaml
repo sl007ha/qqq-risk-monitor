@@ -1,155 +1,281 @@
 version: 2
-as_of: 2026-07-01
-
-current_iteration: iteration_003
-last_completed_iteration: iteration_003
-next_planned_iteration: iteration_004
-
+as_of: '2026-07-01'
+current_iteration: iteration_004_fd001
+last_completed_iteration: iteration_004_fd001
+next_planned_iteration: RQ005_FD001_VOL_TERM_BURDEN_REDUCTION
+active_feature_snapshot:
+  id: FD_001_combined
+  status: frozen_research_snapshot
+  path: feature_lab/FD_001_combined/
+  latest_date: 2026-06-30
+  candidate_hypothesis_columns: 10
+  context_only_columns: 4
+  descriptive_only_columns: 4
+  episode_diagnostics_only_columns: 4
 active_hypotheses:
-  - hypothesis_id: I002_H001
-    status: active_downside_volatility_baseline
-    source_iteration: iteration_002
-    evidence:
-      base_rate_lift: 2.59
-      alert_burden: 0.0750
-      event_coverage: 0.4000
-      positive_lift_folds: "5/19"
-      median_lead_bd: 3.0
-    next_action: Compare against I003_H001 at event level; do not replace with I003_H001 yet.
-
-  - hypothesis_id: I002_H002
-    status: active_cross_asset_baseline
-    source_iteration: iteration_002
-    evidence:
-      base_rate_lift: 1.97
-      alert_burden: 0.1604
-      event_coverage: 0.5224
-      positive_lift_folds: "11/19"
-      median_lead_bd: 0.0
-    next_action: Preserve as cross-asset baseline; do not use the I003_H002 rewrite as successor.
-
-  - hypothesis_id: I002_H003
-    status: active_low_burden_leadership_baseline
-    source_iteration: iteration_002
-    evidence:
-      base_rate_lift: 2.24
-      alert_burden: 0.0516
-      event_coverage: 0.3103
-      positive_lift_folds: "6/19"
-      median_lead_bd: 13.5
-    next_action: Use as the low-burden leadership baseline and possible context overlay.
-
-  - hypothesis_id: I003_H005
-    status: active_false_calm_rewrite_candidate
-    source_iteration: iteration_003
-    evidence:
-      base_rate_lift: 1.45
-      alert_burden: 0.1608
-      event_coverage: 0.6706
-      positive_lift_folds: "10/19"
-      median_lead_bd: 5.0
-    next_action: Reduce alert burden through a pre-declared second-stage confirmation rule without threshold optimization.
-
+- hypothesis_id: I002_H001
+  status: active_downside_volatility_baseline
+  source_iteration: iteration_002
+  evidence:
+    base_rate_lift: 2.59
+    alert_burden: 0.075
+    event_coverage: 0.4
+    positive_lift_folds: 5/19
+    median_lead_bd: 3.0
+  next_action: Compare against I003_H001 at event level; do not replace with I003_H001
+    yet.
+- hypothesis_id: I002_H002
+  status: active_cross_asset_baseline
+  source_iteration: iteration_002
+  evidence:
+    base_rate_lift: 1.97
+    alert_burden: 0.1604
+    event_coverage: 0.5224
+    positive_lift_folds: 11/19
+    median_lead_bd: 0.0
+  next_action: Preserve as cross-asset baseline; do not use the I003_H002 rewrite
+    as successor.
+- hypothesis_id: I002_H003
+  status: active_low_burden_leadership_baseline
+  source_iteration: iteration_002
+  evidence:
+    base_rate_lift: 2.24
+    alert_burden: 0.0516
+    event_coverage: 0.3103
+    positive_lift_folds: 6/19
+    median_lead_bd: 13.5
+  next_action: Use as the low-burden leadership baseline and possible context overlay.
+- hypothesis_id: I003_H005
+  status: active_false_calm_rewrite_candidate
+  source_iteration: iteration_003
+  evidence:
+    base_rate_lift: 1.45
+    alert_burden: 0.1608
+    event_coverage: 0.6706
+    positive_lift_folds: 10/19
+    median_lead_bd: 5.0
+  next_action: Reduce alert burden through a pre-declared second-stage confirmation
+    rule without threshold optimization.
+- hypothesis_id: FD001_H002_VOL_TERM_PERSISTENT_ACUTE_STRESS
+  status: active_fd001_vol_term_rewrite_candidate
+  source_iteration: iteration_004_fd001
+  parent_feature_snapshot_id: FD_001_combined
+  evidence:
+    base_rate_lift: 1.4612335414824227
+    alert_burden: 0.17393548387096774
+    event_coverage: 0.6605504587155964
+    positive_lift_folds: 8/19
+    median_lead_bd: 1.0
+  next_action: Rewrite to reduce burden and improve fold stability before any shadow
+    dashboard consideration.
 rejected_hypotheses:
-  - hypothesis_id: I003_H002
-    status: dropped_exact_variant
-    source_iteration: iteration_003
-    evidence:
-      base_rate_lift: 1.85
-      alert_burden: 0.1170
-      event_coverage: 0.4254
-      positive_lift_folds: "8/19"
-      median_lead_bd: 0.0
-    reason: Reduced burden versus I002_H002, but worsened lift, coverage, stability, and did not improve lead time.
-    lesson: Cross-asset burden reduction is not useful if it removes the stable coverage that made I002_H002 useful.
-
-  - hypothesis_id: I003_H004
-    status: rejected_false_repair_variant
-    source_iteration: iteration_003
-    evidence:
-      base_rate_lift: 0.19
-      alert_burden: 0.0221
-      event_coverage: 0.0
-      positive_lift_folds: "0/19"
-      median_lead_bd: null
-    reason: Simplified false-repair trigger produced no event coverage and no positive-lift folds.
-    lesson: Do not retest the same MMDI-repair plus unresolved-price-damage formulation against the same 30BD MDD target without a new target or new data.
-
-  - hypothesis_id: I002_H004
-    status: rejected_false_repair_variant
-    source_iteration: iteration_002
-    evidence:
-      base_rate_lift: 0.0
-      alert_burden: 0.0108
-      event_coverage: 0.0
-      positive_lift_folds: "0/19"
-      median_lead_bd: null
-    reason: Original false-repair trigger was over-constrained and produced zero alert hits.
-    lesson: The false-repair theme needs different event-based repair features or a different target definition before revisiting.
-
+- hypothesis_id: I003_H002
+  status: dropped_exact_variant
+  source_iteration: iteration_003
+  evidence:
+    base_rate_lift: 1.85
+    alert_burden: 0.117
+    event_coverage: 0.4254
+    positive_lift_folds: 8/19
+    median_lead_bd: 0.0
+  reason: Reduced burden versus I002_H002, but worsened lift, coverage, stability,
+    and did not improve lead time.
+  lesson: Cross-asset burden reduction is not useful if it removes the stable coverage
+    that made I002_H002 useful.
+- hypothesis_id: I003_H004
+  status: rejected_false_repair_variant
+  source_iteration: iteration_003
+  evidence:
+    base_rate_lift: 0.19
+    alert_burden: 0.0221
+    event_coverage: 0.0
+    positive_lift_folds: 0/19
+    median_lead_bd: null
+  reason: Simplified false-repair trigger produced no event coverage and no positive-lift
+    folds.
+  lesson: Do not retest the same MMDI-repair plus unresolved-price-damage formulation
+    against the same 30BD MDD target without a new target or new data.
+- hypothesis_id: I002_H004
+  status: rejected_false_repair_variant
+  source_iteration: iteration_002
+  evidence:
+    base_rate_lift: 0.0
+    alert_burden: 0.0108
+    event_coverage: 0.0
+    positive_lift_folds: 0/19
+    median_lead_bd: null
+  reason: Original false-repair trigger was over-constrained and produced zero alert
+    hits.
+  lesson: The false-repair theme needs different event-based repair features or a
+    different target definition before revisiting.
+- hypothesis_id: FD001_H003_VOL_DISAGREEMENT_REGIME_SHIFT
+  status: rewrite_as_context_not_standalone
+  source_iteration: iteration_004_fd001
+  parent_feature_snapshot_id: FD_001_combined
+  evidence:
+    base_rate_lift: 1.0810090824572696
+    alert_burden: 0.050741775962158675
+    event_coverage: 0.3176470588235294
+    positive_lift_folds: 4/19
+    median_lead_bd: 10.0
+  reason: Low burden and lead were not enough to overcome weak lift, coverage, and
+    fold stability.
+  lesson: Use FD_001 volatility disagreement as context or confirmation only.
+- hypothesis_id: FD001_H004_FALSE_CALM_VOL_DISAGREEMENT_CONFIRMATION
+  status: dropped_direct_trigger
+  source_iteration: iteration_004_fd001
+  parent_feature_snapshot_id: FD_001_combined
+  evidence:
+    base_rate_lift: 0.8721987810595405
+    alert_burden: 0.02257579015265534
+    event_coverage: 0.17647058823529413
+    positive_lift_folds: 4/19
+    median_lead_bd: 12.0
+  reason: Sub-base lift and low event coverage.
+  lesson: Do not retest this direct trigger without changed target or structure.
+- hypothesis_id: FD001_H001_FALSE_CALM_CONFIRMED_DOWNSIDE
+  status: dropped_direct_trigger
+  source_iteration: iteration_004_fd001
+  parent_feature_snapshot_id: FD_001_combined
+  evidence:
+    base_rate_lift: 0.8025139574660342
+    alert_burden: 0.13933849401829698
+    event_coverage: 0.4878048780487805
+    positive_lift_folds: 7/19
+    median_lead_bd: 3.0
+  reason: Confirmed false-calm deterioration did not improve hit-rate lift and carried
+    high burden.
+  lesson: FD_001 confirmed false-calm is not sufficient as a direct trigger against
+    the 30BD -8% MDD target.
 rewrite_queue:
-  - queue_id: RQ004_FALSE_CALM_BURDEN_REDUCTION
-    source_hypotheses:
-      - I003_H005
-      - I002_H005
-    objective: Reduce false-calm alert burden while preserving event coverage and lead time.
-    required_constraints:
-      - No threshold optimization.
-      - Use only exact feature columns verified in the inventory.
-      - Do not use live sentiment or headline features for historical tests.
-      - Keep production dashboard logic unchanged.
-    next_iteration_candidate: iteration_004
-
-  - queue_id: RQ004_DOWNSIDE_VOL_COMPARISON
-    source_hypotheses:
-      - I002_H001
-      - I003_H001
-    objective: Compare downside-volatility signals at event level rather than optimizing daily lift.
-    required_constraints:
-      - Treat I002_H001 as the baseline.
-      - Use I003_H001 only as comparison or context until evidence justifies otherwise.
-      - Preserve both variants in analysis.
-    next_iteration_candidate: iteration_004
-
-  - queue_id: RQ004_LEADERSHIP_CONTEXT_OVERLAY
-    source_hypotheses:
-      - I002_H003
-      - I003_H003
-    objective: Test leadership evidence as context for false-calm or downside-volatility alerts, not as a standalone high-burden trigger.
-    required_constraints:
-      - Do not promote I003_H003 as a standalone alert.
-      - Require alert-burden evidence before considering any dashboard candidate.
-    next_iteration_candidate: iteration_004
-
+- queue_id: RQ004_FALSE_CALM_BURDEN_REDUCTION
+  source_hypotheses:
+  - I003_H005
+  - I002_H005
+  objective: Reduce false-calm alert burden while preserving event coverage and lead
+    time.
+  required_constraints:
+  - No threshold optimization.
+  - Use only exact feature columns verified in the inventory.
+  - Do not use live sentiment or headline features for historical tests.
+  - Keep production dashboard logic unchanged.
+  next_iteration_candidate: iteration_004
+- queue_id: RQ004_DOWNSIDE_VOL_COMPARISON
+  source_hypotheses:
+  - I002_H001
+  - I003_H001
+  objective: Compare downside-volatility signals at event level rather than optimizing
+    daily lift.
+  required_constraints:
+  - Treat I002_H001 as the baseline.
+  - Use I003_H001 only as comparison or context until evidence justifies otherwise.
+  - Preserve both variants in analysis.
+  next_iteration_candidate: iteration_004
+- queue_id: RQ004_LEADERSHIP_CONTEXT_OVERLAY
+  source_hypotheses:
+  - I002_H003
+  - I003_H003
+  objective: Test leadership evidence as context for false-calm or downside-volatility
+    alerts, not as a standalone high-burden trigger.
+  required_constraints:
+  - Do not promote I003_H003 as a standalone alert.
+  - Require alert-burden evidence before considering any dashboard candidate.
+  next_iteration_candidate: iteration_004
+- queue_id: RQ005_FD001_VOL_TERM_BURDEN_REDUCTION
+  source_hypotheses:
+  - FD001_H002_VOL_TERM_PERSISTENT_ACUTE_STRESS
+  objective: Reduce FD_001 vol-term persistence alert burden while preserving acute-shock
+    event coverage.
+  required_constraints:
+  - No threshold optimization.
+  - Use context-only columns only as companions or pre-declared confirmation gates.
+  - Keep production dashboard logic unchanged.
+  next_iteration_candidate: future_rewrite_iteration
 dashboard_candidates:
   current_candidate: null
   candidates: []
   human_approval_required_before_production: true
-
 next_required_action:
-  id: iteration_004_design
-  description: Run a future iteration_004 research loop using the rewrite queue, after validating iteration_003 artifacts and reviewing this state file.
+  id: RQ005_FD001_VOL_TERM_BURDEN_REDUCTION
+  stage: FEATURE_TO_HYPOTHESIS_PLANNING
+  description: Plan a future research-only rewrite of FD001_H002 to reduce alert burden
+    and improve yearly fold stability.
   must_not_do:
-    - Do not generate new hypotheses until iteration_004 is explicitly requested.
-    - Do not run iteration_004 from this workflow-hardening task.
-    - Do not optimize thresholds without explicit human approval.
-    - Do not modify production dashboard logic.
-
+  - Do not run a new iteration without explicit request.
+  - Do not promote to production.
+  - Do not modify production dashboard logic.
+  - Do not modify production feature construction.
+  - Do not modify render.py, pipeline.py, or run_dashboard.py.
+  - Do not optimize thresholds.
+historical_next_required_action:
+  id: iteration_004_design
+  description: Run a future iteration_004 research loop using the rewrite queue, after
+    validating iteration_003 artifacts and reviewing this state file.
+  must_not_do:
+  - Do not generate new hypotheses until iteration_004 is explicitly requested.
+  - Do not run iteration_004 from this workflow-hardening task.
+  - Do not optimize thresholds without explicit human approval.
+  - Do not modify production dashboard logic.
 protected_files:
-  - qqq_autoresearch/data_sources.py
-  - qqq_autoresearch/features.py
-  - qqq_autoresearch/config.py
-  - qqq_autoresearch/candidate.py
-  - qqq_autoresearch/pipeline.py
-  - qqq_autoresearch/render.py
-  - run_dashboard.py
-
+- qqq_autoresearch/data_sources.py
+- qqq_autoresearch/features.py
+- qqq_autoresearch/config.py
+- qqq_autoresearch/candidate.py
+- qqq_autoresearch/pipeline.py
+- qqq_autoresearch/render.py
+- run_dashboard.py
 allowed_research_files:
-  - research_loop/
-  - hypothesis_registry/
-  - feature_backlog/
-  - dashboard_candidates/
-  - prompts/
-  - research_iterations/iteration_004/
-  - qqq_autoresearch/hypothesis_tests_iteration_004.py
-  - run_hypothesis_tests_iteration_004.py
+- research_loop/
+- hypothesis_registry/
+- feature_backlog/
+- dashboard_candidates/
+- prompts/
+- research_iterations/iteration_004/
+- qqq_autoresearch/hypothesis_tests_iteration_004.py
+- run_hypothesis_tests_iteration_004.py
+- research_iterations/iteration_004_fd001/
+- qqq_autoresearch/hypothesis_tests_iteration_004_fd001.py
+- run_hypothesis_tests_iteration_004_fd001.py
+orchestrator:
+  task_history:
+  - task_id: FD_001_FEATURE_TO_HYPOTHESIS_PLANNING
+    status: completed
+    recorded_at_utc: '2026-07-01T09:24:27+00:00'
+    validator_report: research_loop/task_results/FD_001_FEATURE_TO_HYPOTHESIS_PLANNING/validator_report.yaml
+  - task_id: FD_001_HYPOTHESIS_VALIDATION
+    status: completed
+    recorded_at_utc: '2026-07-01T09:26:50+00:00'
+    unblocked_tasks:
+    - FD_001_TEST_IMPLEMENTATION
+    validator_report: research_loop/task_results/FD_001_HYPOTHESIS_VALIDATION/validator_report.yaml
+  - task_id: FD_001_TEST_IMPLEMENTATION
+    status: completed
+    recorded_at_utc: '2026-07-01T09:28:59+00:00'
+    unblocked_tasks:
+    - FD_001_WALK_FORWARD_TEST
+    validator_report: research_loop/task_results/FD_001_TEST_IMPLEMENTATION/validator_report.yaml
+  - task_id: FD_001_WALK_FORWARD_TEST
+    status: completed
+    recorded_at_utc: '2026-07-01T09:29:21+00:00'
+    unblocked_tasks:
+    - FD_001_EVIDENCE_ANALYSIS
+    validator_report: research_loop/task_results/FD_001_WALK_FORWARD_TEST/validator_report.yaml
+  - task_id: FD_001_EVIDENCE_ANALYSIS
+    status: completed
+    recorded_at_utc: '2026-07-01T09:31:01+00:00'
+    unblocked_tasks:
+    - FD_001_REGISTRY_UPDATE
+    validator_report: research_loop/task_results/FD_001_EVIDENCE_ANALYSIS/validator_report.yaml
+  - task_id: FD_001_REGISTRY_UPDATE
+    status: completed
+    recorded_at_utc: '2026-07-01T09:32:47+00:00'
+    unblocked_tasks:
+    - FD_001_DASHBOARD_CANDIDATE_DECISION
+    validator_report: research_loop/task_results/FD_001_REGISTRY_UPDATE/validator_report.yaml
+  - &id001
+    task_id: FD_001_DASHBOARD_CANDIDATE_DECISION
+    status: completed
+    recorded_at_utc: '2026-07-01T09:33:42+00:00'
+    validator_report: research_loop/task_results/FD_001_DASHBOARD_CANDIDATE_DECISION/validator_report.yaml
+  last_task_result: *id001
+  attention_required: false

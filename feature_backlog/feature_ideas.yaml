@@ -1,0 +1,199 @@
+version: 1
+as_of: 2026-07-01
+purpose: Controlled backlog of proposed feature ideas generated from prior iteration failures and preserved lessons.
+
+global_rules:
+  status: proposed_feature
+  promotion_gates: research_loop/feature_promotion_gates.yaml
+  production_feature_construction_allowed: false
+  exact_feature_columns_used_policy: Do not populate hypothesis exact_feature_columns_used from this backlog. Verify accepted columns separately.
+  redundancy_policy: Every idea must be checked against outputs/qqq_r2_mmdi_v1_3_1_all_feature_inventory.csv before implementation.
+
+feature_ideas:
+  - feature_id: FD001_EARLIER_CROSS_ASSET_LEAD_TIME
+    title: Earlier cross-asset lead-time deterioration
+    status: proposed_feature
+    source_type: prior_iteration_failure
+    source_references:
+      - research_iterations/iteration_002/analysis.md
+      - research_iterations/iteration_003/analysis.md
+      - research_loop/research_state.yaml
+    generated_from:
+      hypotheses:
+        - I002_H002
+        - I003_H002
+      failure_or_lesson: I003_H002 reduced alert burden but worsened lift, coverage, stability, and did not improve 0BD median lead time versus I002_H002.
+    economic_mechanism: Credit, rates, dollar, and volatility markets may begin deteriorating before QQQ price damage becomes obvious; lead-time features should separate early macro stress from same-day volatility confirmation.
+    raw_inputs:
+      - credit spread level and change measures
+      - IG and HY spread proxies
+      - Treasury yield and curve changes
+      - dollar index changes
+      - volatility term structure or front-vol proxies
+    formula: Construct rolling lead/acceleration transforms such as prior-window cross-asset deterioration count, stress acceleration over 5D/20D windows, and early-stress-without-price-break confirmation. Exact formula must be specified in a feature spec after inventory review.
+    data_source: Current exported feature inventory plus any documented public point-in-time macro or market series accepted by a feasibility audit.
+    point_in_time_risk: Medium. FRED macro series require release-lag review; market series are generally daily but vendor corrections and history availability must be documented.
+    expected_direction: Higher early cross-asset deterioration should increase future acute QQQ shock risk and improve median lead time.
+    candidate_hypothesis_use: Rewrite cross-asset acute shock hypotheses by requiring early deterioration before same-day volatility confirmation.
+    redundancy_check:
+      status: required_before_feasibility_passed
+      known_related_current_features:
+        - credit_spread
+        - credit_spread_20d_change
+        - hy_oas_change_20d
+        - ig_oas_change_20d
+        - ust10y_change_20d
+        - dxy_change_20d
+      required_question: Does the proposed lead-time transform add timing information beyond current level and 20D change columns?
+    live_sentiment_or_headline_policy: Not applicable.
+
+  - feature_id: FD002_EVENT_BASED_REPAIR_QUALITY
+    title: Event-based repair quality after drawdown damage
+    status: proposed_feature
+    source_type: prior_iteration_failure
+    source_references:
+      - research_iterations/iteration_002/analysis.md
+      - research_iterations/iteration_003/analysis.md
+      - research_loop/research_state.yaml
+    generated_from:
+      hypotheses:
+        - I002_H004
+        - I003_H004
+      failure_or_lesson: Both false-repair variants produced zero event coverage; the current single-day MMDI-repair plus unresolved-price-damage formulation should not be retested unchanged.
+    economic_mechanism: Failed repairs after drawdown damage may be episodic rather than visible in a single daily state; repair quality should measure bounce durability, reclaim failures, breadth relapse, and renewed lower-high/lower-low behavior.
+    raw_inputs:
+      - QQQ close, high, low, and moving averages
+      - drawdown from rolling highs
+      - MMDI level and change
+      - breadth and leadership context if available
+      - failed reclaim and lower-high/lower-low flags if available
+    formula: Build episode features such as days since drawdown trough, bounce retracement quality, failed reclaim count during a repair window, breadth relapse after bounce, and repair relapse flags. Exact windows must be deterministic and pre-declared in the spec.
+    data_source: Current exported dashboard and feature-universe CSVs; future breadth inputs only if point-in-time coverage is documented.
+    point_in_time_risk: Low to medium for price-derived fields; medium for breadth fields if current membership or survivorship bias is present.
+    expected_direction: Lower repair quality after drawdown damage should increase future repair-failure or path-risk probability.
+    candidate_hypothesis_use: Revisit repair failure only with event-based features or a changed target definition, not the prior single-day formulation.
+    redundancy_check:
+      status: required_before_feasibility_passed
+      known_related_current_features:
+        - failed_reclaim_ma50
+        - failed_reclaim_ma200
+        - lower_high_flag
+        - lower_low_flag
+        - rebound_from_trough_20d
+        - underwater_days_52w
+      required_question: Does the proposed episode framing capture sequence quality that existing daily flags do not?
+    live_sentiment_or_headline_policy: Not applicable.
+
+  - feature_id: FD003_LEADERSHIP_AS_CONTEXT
+    title: Leadership-as-context overlay features
+    status: proposed_feature
+    source_type: prior_iteration_failure
+    source_references:
+      - research_iterations/iteration_002/analysis.md
+      - research_iterations/iteration_003/analysis.md
+      - research_loop/research_state.yaml
+    generated_from:
+      hypotheses:
+        - I002_H003
+        - I003_H003
+      failure_or_lesson: I002_H003 had useful low-burden lead time, while I003_H003 raised coverage but became too broad as a standalone alert.
+    economic_mechanism: Narrow or deteriorating leadership can provide context for other stress signals, but broad leadership warnings can overwhelm selectivity when used alone.
+    raw_inputs:
+      - QQQ versus equal-weight or broad-market relatives
+      - semiconductor and Mag7 relative strength
+      - leadership persistence measures
+      - overlap with false-calm or downside-volatility alerts
+    formula: Construct context features such as leadership deterioration persistence, leadership non-confirmation age, and overlap flags with candidate risk alerts. Exact columns and windows must be selected after inventory redundancy review.
+    data_source: Current feature inventory and exported feature-universe columns; additional constituent-level breadth only after point-in-time feasibility review.
+    point_in_time_risk: Medium. ETF and index proxies are generally usable; constituent concentration or breadth must avoid survivorship and current-membership leakage.
+    expected_direction: Persistent narrow leadership or leadership non-confirmation should raise risk when combined with false-calm or downside-volatility signals, not necessarily as a standalone warning.
+    candidate_hypothesis_use: Add a second-stage context gate to false-calm or downside-volatility hypotheses to reduce burden without losing lead time.
+    redundancy_check:
+      status: required_before_feasibility_passed
+      known_related_current_features:
+        - qqq_equal_weight_rel
+        - qqq_vs_qqqe_3m
+        - qqq_vs_iwm_3m
+        - soxx_vs_spy_3m
+        - mag7_equal_weight_vs_qqq
+        - mag7_breadth
+      required_question: Does the proposed context feature improve interaction timing rather than duplicating existing relative-strength levels?
+    live_sentiment_or_headline_policy: Not applicable.
+
+  - feature_id: FD004_FALSE_CALM_CONFIRMATION
+    title: False-calm confirmation and burden control
+    status: proposed_feature
+    source_type: prior_iteration_failure
+    source_references:
+      - research_iterations/iteration_002/analysis.md
+      - research_iterations/iteration_003/analysis.md
+      - research_loop/research_state.yaml
+    generated_from:
+      hypotheses:
+        - I002_H005
+        - I003_H005
+      failure_or_lesson: I003_H005 improved lift, burden, event coverage, false-calm count, fold stability, and lead time versus I002_H005, but remains too broad for a dashboard alert.
+    economic_mechanism: Quiet headline dashboard states can hide internal deterioration; confirmation features should distinguish benign calm from calm with accumulating breadth, volatility, or trend damage.
+    raw_inputs:
+      - R2 state or stress count
+      - MMDI level, acceleration, and percentile
+      - realized volatility and downside-tape measures
+      - trend damage and breadth context
+      - leadership context overlays after validation
+    formula: Build confirmation features such as quiet-state deterioration count, calm-with-acceleration persistence, and second-stage confirmation flags requiring multiple independent internal-stress families. Thresholds must be deterministic and pre-declared.
+    data_source: Current exported dashboard and feature-universe columns; no live sentiment unless only current-context classification is intended.
+    point_in_time_risk: Low for price and exported historical technical fields; high for headline or live sentiment fields unless archived point-in-time.
+    expected_direction: More internal deterioration during a calm dashboard state should increase future drawdown path risk, while stricter confirmation should reduce alert burden.
+    candidate_hypothesis_use: Focus iteration 004-style false-calm rewrites on burden reduction while preserving coverage and median lead.
+    redundancy_check:
+      status: required_before_feasibility_passed
+      known_related_current_features:
+        - R2_ACTIVE
+        - R2_STRESS_COUNT
+        - MMDI
+        - MMDI_10D_CHANGE
+        - mmdi_20d_change
+        - mmdi_percentile_252d
+        - downside_vol_20d
+        - large_red_day_count_20d
+      required_question: Does the proposed confirmation feature reduce false positives beyond existing R2/MMDI components and downside-volatility columns?
+    live_sentiment_or_headline_policy: Current-context-only unless a historical point-in-time headline archive exists.
+
+  - feature_id: FD005_DOWNSIDE_VOLATILITY_STABILITY
+    title: Downside-volatility fold stability features
+    status: proposed_feature
+    source_type: prior_iteration_failure
+    source_references:
+      - research_iterations/iteration_002/analysis.md
+      - research_iterations/iteration_003/analysis.md
+      - research_loop/research_state.yaml
+    generated_from:
+      hypotheses:
+        - I002_H001
+        - I003_H001
+      failure_or_lesson: I003_H001 slightly improved positive-lift folds but worsened burden, lift, and median lead time versus the I002_H001 downside-volatility baseline.
+    economic_mechanism: Downside-volatility stress is useful, but stability across regimes may require measuring whether downside pressure is persistent, broad, and trend-confirmed rather than transient.
+    raw_inputs:
+      - downside and upside realized volatility
+      - realized skew and kurtosis
+      - gap-down and large-red-day counts
+      - trend pressure and drawdown speed
+      - range expansion measures
+    formula: Construct stability features such as downside-volatility persistence, downside/upside volatility ratio stability, repeated shock count, and volatility-stress-with-trend-confirmation duration. Exact windows must be pre-declared and compared to current columns.
+    data_source: Current exported feature inventory and QQQ OHLCV-derived historical fields.
+    point_in_time_risk: Low for QQQ OHLCV-derived fields when computed only from information available through each date.
+    expected_direction: More persistent downside-volatility stress should increase future path-risk odds and improve fold stability.
+    candidate_hypothesis_use: Compare against I002_H001 and I003_H001 at event level before drafting replacement hypotheses.
+    redundancy_check:
+      status: required_before_feasibility_passed
+      known_related_current_features:
+        - downside_vol_20d
+        - upside_vol_20d
+        - downside_upside_vol_ratio
+        - realized_skew_20d
+        - realized_kurt_20d
+        - gap_down_count_20d
+        - large_red_day_count_20d
+        - range_20d_vs_252d
+      required_question: Does the proposed persistence feature improve stability rather than restating current daily downside-volatility levels?
+    live_sentiment_or_headline_policy: Not applicable.

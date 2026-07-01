@@ -1,0 +1,169 @@
+version: 1
+purpose: Machine-readable gates for controlled feature discovery in QQQ Risk Monitor.
+
+global_hard_rules:
+  no_production_feature_construction_changes_without_human_approval: true
+  no_production_dashboard_changes_without_human_approval: true
+  protected_files_must_not_be_modified:
+    - qqq_autoresearch/data_sources.py
+    - qqq_autoresearch/features.py
+    - qqq_autoresearch/config.py
+  no_features_added_directly_to_production: true
+  no_hypothesis_tests_during_feature_discovery_without_explicit_request: true
+  every_feature_requires_source: true
+  every_feature_requires_redundancy_check: true
+  live_sentiment_current_context_only_without_point_in_time_archive: true
+
+required_feature_spec_fields:
+  - feature_id
+  - title
+  - source_type
+  - source_references
+  - economic_mechanism
+  - raw_inputs
+  - formula
+  - data_source
+  - point_in_time_risk
+  - expected_direction
+  - candidate_hypothesis_use
+  - leakage_risks
+  - redundancy_check
+  - coverage_requirement
+  - validation_plan
+  - production_promotion_status
+
+gates:
+  proposed_feature:
+    description: A feature idea has been captured from evidence but has not passed feasibility or redundancy review.
+    entry_conditions:
+      source_type_any_of:
+        - prior_iteration_failure
+        - dashboard_blind_spot
+        - research_source
+        - market_mechanism
+      feature_backlog_entry_exists: true
+      economic_mechanism_described: true
+      raw_inputs_listed: true
+      initial_formula_or_transform_described: true
+      expected_direction_stated: true
+      candidate_hypothesis_use_stated: true
+    required_artifacts:
+      - feature_backlog/feature_ideas.yaml
+      - feature_backlog/feature_lineage.yaml
+    disallowed_actions:
+      - production_feature_implementation
+      - production_dashboard_change
+      - hypothesis_test_run
+    human_approval_required: false
+
+  feasibility_passed:
+    description: Data availability, point-in-time status, and implementation feasibility have been audited.
+    prerequisites:
+      prior_gate: proposed_feature
+    required_checks:
+      raw_inputs_available_or_future_requirement_labeled: true
+      point_in_time_availability_documented: true
+      data_source_documented: true
+      release_lag_or_revision_risk_documented: true
+      minimum_coverage_requirement_documented: true
+      live_sentiment_or_headlines_marked_current_context_only_if_no_archive: true
+      implementation_complexity_estimated: true
+    required_artifacts:
+      - feature_specs/<feature_id>.yaml
+      - feasibility audit in feature spec or research iteration folder
+    disallowed_actions:
+      - production_feature_implementation
+      - production_dashboard_change
+      - hypothesis_test_run
+    human_approval_required: false
+
+  implemented_experimental:
+    description: A research-only implementation exists outside production feature construction.
+    prerequisites:
+      prior_gate: feasibility_passed
+    required_checks:
+      implementation_path_under_feature_lab_or_iteration_folder: true
+      declared_raw_inputs_only: true
+      deterministic_formula_used: true
+      no_protected_files_modified: true
+      no_run_dashboard_wiring: true
+      no_dashboard_html_or_production_export_change: true
+      experimental_output_snapshot_written: true
+    allowed_locations:
+      - feature_lab/
+      - research_iterations/iteration_00N/
+    disallowed_locations:
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/candidate.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+    human_approval_required: false
+
+  feature_validated:
+    description: The experimental feature has passed standalone validation and can be considered for research inventory acceptance.
+    prerequisites:
+      prior_gate: implemented_experimental
+    required_checks:
+      coverage_summary_present: true
+      first_valid_date_present: true
+      latest_valid_date_present: true
+      missingness_profile_present: true
+      leakage_audit_passed: true
+      redundancy_audit_completed: true
+      economic_interpretation_documented: true
+      expected_direction_documented: true
+      current_context_only_classification_if_needed: true
+      implementation_reproducible_from_declared_inputs: true
+    required_artifacts:
+      - validation summary
+      - experimental feature output snapshot
+      - redundancy audit notes
+    disallowed_actions:
+      - production_feature_implementation
+      - production_dashboard_change
+      - hypothesis_test_run_unless_separately_requested
+    human_approval_required: false
+
+  accepted_to_inventory:
+    description: A validated research feature is accepted into a research-only accepted feature snapshot.
+    prerequisites:
+      prior_gate: feature_validated
+    required_checks:
+      accepted_snapshot_entry_exists: true
+      exact_experimental_column_names_recorded: true
+      source_spec_path_recorded: true
+      implementation_path_recorded: true
+      validation_artifact_path_recorded: true
+      leakage_classification_recorded: true
+      redundancy_result_recorded: true
+      production_status_explicitly_research_only: true
+    required_artifacts:
+      - accepted feature snapshot under feature_lab/ or research iteration folder
+    production_implication: none
+    human_approval_required: false
+
+  eligible_for_hypothesis:
+    description: An accepted research feature can be used to draft hypothesis candidates.
+    prerequisites:
+      prior_gate: accepted_to_inventory
+    required_checks:
+      accepted_feature_snapshot_available: true
+      feature_spec_complete: true
+      validation_summary_available: true
+      exact_columns_or_experimental_columns_named: true
+      unavailable_inputs_excluded_from_exact_feature_columns_used: true
+      candidate_hypothesis_use_stated: true
+      threshold_policy_predeclared: true
+      no_live_sentiment_historical_use_without_archive: true
+    allowed_next_steps:
+      - draft_hypothesis_candidate
+      - update_hypothesis_generation_prompt_context
+    disallowed_actions:
+      - automatic_hypothesis_test_run
+      - production_dashboard_change
+      - production_feature_construction_change
+    human_approval_required_for_hypothesis_generation: false
+    human_approval_required_for_production_use: true
