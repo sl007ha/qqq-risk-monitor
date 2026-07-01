@@ -1,0 +1,414 @@
+version: 1
+as_of: 2026-07-01
+purpose: Research Orchestrator v1 stage contract for controlled quant research progression.
+
+protected_files:
+  - qqq_autoresearch/features.py
+  - qqq_autoresearch/data_sources.py
+  - qqq_autoresearch/config.py
+  - qqq_autoresearch/pipeline.py
+  - qqq_autoresearch/render.py
+  - run_dashboard.py
+
+global_rules:
+  no_external_services_from_orchestrator_scripts: true
+  no_hypothesis_tests_unless_stage_allows: true
+  no_production_dashboard_changes_without_human_approval: true
+  no_production_feature_construction_changes_without_human_approval: true
+  evidence_over_claims: true
+
+stages:
+  FEATURE_RESEARCH:
+    objective: Collect evidence-backed feature ideas from research, market mechanisms, dashboard blind spots, and prior failures.
+    required_inputs:
+      - research_loop/research_state.yaml
+      - hypothesis_registry/rewrite_queue.yaml
+      - prior research iteration analysis and decision logs
+      - current feature inventory
+    required_outputs:
+      - feature_research/<run_id>/source_manifest.yaml
+      - feature_research/<run_id>/source_notes.md
+      - feature_research/<run_id>/extracted_feature_ideas.yaml
+      - feature_research/<run_id>/feature_discovery_report.md
+    allowed_files:
+      - feature_research/
+      - feature_backlog/
+      - feature_specs/
+      - prompts/
+      - research_loop/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+      - outputs/
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+    next_stage_on_pass: FEATURE_FEASIBILITY_AUDIT
+    next_stage_on_fail: FEATURE_RESEARCH
+    human_approval_required: false
+
+  FEATURE_FEASIBILITY_AUDIT:
+    objective: Audit proposed features for input availability, coverage, leakage, release lag, redundancy, and implementation complexity.
+    required_inputs:
+      - feature_research/<run_id>/feature_discovery_report.md
+      - feature_research/<run_id>/extracted_feature_ideas.yaml
+      - feature_specs/
+      - outputs/*_all_feature_inventory.csv
+      - outputs/*_all_features_daily_wide.csv
+    required_outputs:
+      - feature_research/<run_id>/feature_feasibility_audit.csv
+      - feature_research/<run_id>/feature_feasibility_audit.md
+      - feature_research/<run_id>/feature_implementation_plan.md
+    allowed_files:
+      - feature_research/
+      - feature_specs/
+      - research_loop/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+    next_stage_on_pass: FEATURE_LAB_IMPLEMENTATION
+    next_stage_on_fail: FEATURE_RESEARCH
+    human_approval_required: false
+
+  FEATURE_LAB_IMPLEMENTATION:
+    objective: Implement feasibility-passed features as research-only experimental feature lab artifacts.
+    required_inputs:
+      - feature_research/<run_id>/feature_feasibility_audit.md
+      - feature_research/<run_id>/feature_implementation_plan.md
+      - outputs/*_all_features_daily_wide.csv
+    required_outputs:
+      - feature_lab/<batch_id>/run_feature_lab_<batch_id>.py
+      - feature_lab/<batch_id>/experimental_feature_snapshot.csv
+      - feature_lab/<batch_id>/experimental_feature_inventory.csv
+      - feature_lab/<batch_id>/coverage_summary.csv
+      - feature_lab/<batch_id>/validation_summary.md
+      - feature_lab/<batch_id>/feature_snapshot_manifest.yaml
+    allowed_files:
+      - feature_lab/
+      - feature_research/
+      - research_loop/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+      - outputs/
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_feature_snapshot.py --snapshot-dir <feature_lab_batch_dir>
+    next_stage_on_pass: FEATURE_LAB_REVIEW
+    next_stage_on_fail: FEATURE_LAB_IMPLEMENTATION
+    human_approval_required: false
+
+  FEATURE_LAB_REVIEW:
+    objective: Review experimental feature formulas, missingness, leakage risk, and validation evidence before freezing a snapshot.
+    required_inputs:
+      - feature_lab/<batch_id>/run_feature_lab_<batch_id>.py
+      - feature_lab/<batch_id>/validation_summary.md
+      - research_loop/reviewers/feature_formula_review.md
+    required_outputs:
+      - feature_lab/<batch_id_or_v2>/validation_summary.md
+      - feature_lab/<batch_id_or_v2>/feature_snapshot_manifest.yaml
+      - optional QA patch artifacts under feature_lab/
+    allowed_files:
+      - feature_lab/
+      - feature_research/
+      - research_loop/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+      - outputs/
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_feature_snapshot.py --snapshot-dir <feature_lab_batch_dir>
+    next_stage_on_pass: FEATURE_SNAPSHOT_FREEZE
+    next_stage_on_fail: FEATURE_LAB_IMPLEMENTATION
+    human_approval_required: false
+
+  FEATURE_SNAPSHOT_FREEZE:
+    objective: Combine validated experimental features into a frozen research-only feature snapshot for hypothesis planning.
+    required_inputs:
+      - feature_lab/<batch_id>/experimental_feature_snapshot.csv
+      - feature_lab/<batch_id>/experimental_feature_inventory.csv
+      - feature_lab/<batch_id>/validation_summary.md
+    required_outputs:
+      - feature_lab/<combined_id>/experimental_feature_snapshot.csv
+      - feature_lab/<combined_id>/experimental_feature_inventory.csv
+      - feature_lab/<combined_id>/coverage_summary.csv
+      - feature_lab/<combined_id>/validation_summary.md
+      - feature_lab/<combined_id>/feature_snapshot_manifest.yaml
+      - feature_lab/<combined_id>/next_step_recommendation.md
+    allowed_files:
+      - feature_lab/
+      - research_loop/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+      - outputs/
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validators/validate_feature_snapshot.py --snapshot-dir <combined_feature_dir>
+    next_stage_on_pass: FEATURE_TO_HYPOTHESIS_PLANNING
+    next_stage_on_fail: FEATURE_LAB_REVIEW
+    human_approval_required: false
+
+  FEATURE_TO_HYPOTHESIS_PLANNING:
+    objective: Convert frozen candidate feature columns into pre-declared hypothesis candidates without running tests.
+    required_inputs:
+      - feature_lab/<combined_id>/experimental_feature_inventory.csv
+      - feature_lab/<combined_id>/validation_summary.md
+      - research_loop/research_state.yaml
+      - hypothesis_registry/rewrite_queue.yaml
+    required_outputs:
+      - hypothesis_registry/<plan_id>.yaml
+      - feature_research/<run_id>/feature_to_hypothesis_plan.md
+    allowed_files:
+      - hypothesis_registry/
+      - feature_research/
+      - research_loop/
+      - prompts/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+      - outputs/
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+    next_stage_on_pass: HYPOTHESIS_VALIDATION
+    next_stage_on_fail: FEATURE_TO_HYPOTHESIS_PLANNING
+    human_approval_required: false
+
+  HYPOTHESIS_VALIDATION:
+    objective: Review proposed hypotheses for exact-column validity, threshold policy, leakage safety, target definition, and evidence rationale.
+    required_inputs:
+      - hypothesis_registry/<plan_id>.yaml
+      - outputs/*_all_feature_inventory.csv
+      - research_loop/research_state.yaml
+    required_outputs:
+      - hypothesis_registry/<validated_plan_id>.yaml
+      - research_iterations/<iteration_id>/hypotheses.yaml
+    allowed_files:
+      - hypothesis_registry/
+      - research_iterations/
+      - research_loop/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+      - outputs/
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+    next_stage_on_pass: TEST_IMPLEMENTATION
+    next_stage_on_fail: FEATURE_TO_HYPOTHESIS_PLANNING
+    human_approval_required: false
+
+  TEST_IMPLEMENTATION:
+    objective: Implement research-only deterministic triggers and walk-forward test scaffolding for validated hypotheses.
+    required_inputs:
+      - research_iterations/<iteration_id>/hypotheses.yaml
+      - outputs/*_all_features_daily_wide.csv
+    required_outputs:
+      - qqq_autoresearch/hypothesis_tests_<iteration_id>.py
+      - run_hypothesis_tests_<iteration_id>.py
+    allowed_files:
+      - qqq_autoresearch/hypothesis_tests_*.py
+      - run_hypothesis_tests_*.py
+      - research_iterations/
+      - research_loop/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+    next_stage_on_pass: WALK_FORWARD_TEST
+    next_stage_on_fail: TEST_IMPLEMENTATION
+    human_approval_required: false
+
+  WALK_FORWARD_TEST:
+    objective: Run approved research-only walk-forward tests and write deterministic evidence artifacts.
+    required_inputs:
+      - run_hypothesis_tests_<iteration_id>.py
+      - qqq_autoresearch/hypothesis_tests_<iteration_id>.py
+      - outputs/*_all_features_daily_wide.csv
+    required_outputs:
+      - research_iterations/<iteration_id>/test_summary.csv
+      - research_iterations/<iteration_id>/fold_results.csv
+      - research_iterations/<iteration_id>/daily_signals.csv
+      - research_iterations/<iteration_id>/event_coverage.csv
+    allowed_files:
+      - research_iterations/
+      - qqq_autoresearch/hypothesis_tests_*.py
+      - run_hypothesis_tests_*.py
+      - research_loop/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+      - dashboard_candidates/
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+      - research_loop/validate_iteration_artifacts.py
+    next_stage_on_pass: EVIDENCE_ANALYSIS
+    next_stage_on_fail: TEST_IMPLEMENTATION
+    human_approval_required: false
+
+  EVIDENCE_ANALYSIS:
+    objective: Analyze test results for lift, burden, event coverage, fold stability, lead time, sample size, and regime concentration.
+    required_inputs:
+      - research_iterations/<iteration_id>/test_summary.csv
+      - research_iterations/<iteration_id>/fold_results.csv
+      - research_iterations/<iteration_id>/daily_signals.csv
+      - research_loop/reviewers/evidence_review.md
+    required_outputs:
+      - research_iterations/<iteration_id>/analysis.md
+      - research_iterations/<iteration_id>/decision_log.md
+      - research_iterations/<iteration_id>/next_iteration_plan.md
+    allowed_files:
+      - research_iterations/
+      - research_loop/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+    next_stage_on_pass: REGISTRY_UPDATE
+    next_stage_on_fail: HYPOTHESIS_VALIDATION
+    human_approval_required: false
+
+  REGISTRY_UPDATE:
+    objective: Update hypothesis registry and research state with accepted, rejected, and follow-up items based on evidence.
+    required_inputs:
+      - research_iterations/<iteration_id>/analysis.md
+      - research_iterations/<iteration_id>/decision_log.md
+      - research_loop/research_state.yaml
+    required_outputs:
+      - hypothesis_registry/active_hypotheses.yaml
+      - hypothesis_registry/rejected_hypotheses.yaml
+      - hypothesis_registry/rewrite_queue.yaml
+      - research_loop/research_state.yaml
+    allowed_files:
+      - hypothesis_registry/
+      - research_loop/
+      - research_iterations/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+    next_stage_on_pass: DASHBOARD_CANDIDATE
+    next_stage_on_fail: EVIDENCE_ANALYSIS
+    human_approval_required: false
+
+  DASHBOARD_CANDIDATE:
+    objective: Propose research-backed dashboard candidates without modifying production dashboard files.
+    required_inputs:
+      - research_iterations/<iteration_id>/analysis.md
+      - hypothesis_registry/active_hypotheses.yaml
+      - research_loop/research_state.yaml
+    required_outputs:
+      - dashboard_candidates/<candidate_id>/candidate_summary.md
+      - dashboard_candidates/<candidate_id>/candidate_manifest.yaml
+    allowed_files:
+      - dashboard_candidates/
+      - research_loop/
+      - hypothesis_registry/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+    next_stage_on_pass: SHADOW_DASHBOARD_EVALUATION
+    next_stage_on_fail: REGISTRY_UPDATE
+    human_approval_required: false
+
+  SHADOW_DASHBOARD_EVALUATION:
+    objective: Evaluate dashboard candidates in a research-only shadow layer before any production proposal.
+    required_inputs:
+      - dashboard_candidates/<candidate_id>/candidate_manifest.yaml
+      - research evidence artifacts
+    required_outputs:
+      - dashboard_candidates/<candidate_id>/shadow_evaluation.md
+      - dashboard_candidates/<candidate_id>/shadow_metrics.csv
+    allowed_files:
+      - dashboard_candidates/
+      - research_loop/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+    next_stage_on_pass: PRODUCTION_PROPOSAL
+    next_stage_on_fail: DASHBOARD_CANDIDATE
+    human_approval_required: false
+
+  PRODUCTION_PROPOSAL:
+    objective: Produce a human-reviewable production promotion proposal; do not implement production changes.
+    required_inputs:
+      - dashboard_candidates/<candidate_id>/shadow_evaluation.md
+      - research_loop/research_state.yaml
+    required_outputs:
+      - dashboard_candidates/<candidate_id>/production_proposal.md
+      - dashboard_candidates/<candidate_id>/human_approval_request.md
+    allowed_files:
+      - dashboard_candidates/
+      - research_loop/
+    blocked_files:
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+    validators:
+      - research_loop/validators/validate_no_protected_diff.py
+    next_stage_on_pass: null
+    next_stage_on_fail: SHADOW_DASHBOARD_EVALUATION
+    human_approval_required: true

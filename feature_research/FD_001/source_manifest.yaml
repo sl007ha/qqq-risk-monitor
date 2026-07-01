@@ -1,0 +1,138 @@
+version: 1
+iteration_id: FD_001
+as_of: 2026-07-01
+purpose: Source manifest for controlled feature discovery iteration FD_001.
+
+local_sources:
+  - source_id: local_research_state
+    path: research_loop/research_state.yaml
+    type: repository_state
+    relevance: Active hypotheses, rejected hypotheses, rewrite queue, protected files, and hard constraints.
+
+  - source_id: local_rewrite_queue
+    path: hypothesis_registry/rewrite_queue.yaml
+    type: repository_state
+    relevance: Explicit iteration_004 rewrite objectives for false-calm burden, downside-volatility comparison, and leadership context overlay.
+
+  - source_id: local_feature_requests
+    path: feature_backlog/feature_requests_from_hypotheses.yaml
+    type: repository_backlog
+    relevance: "Prior feature requests from failed hypotheses: cross-asset lead time, event-based repair, and leadership context."
+
+  - source_id: local_iteration_003_analysis
+    path: research_iterations/iteration_003/analysis.md
+    type: iteration_evidence
+    relevance: Metrics and interpretation for I003_H001 through I003_H005.
+
+  - source_id: local_iteration_003_decision_log
+    path: research_iterations/iteration_003/decision_log.md
+    type: iteration_evidence
+    relevance: Preserved failed lessons and active research queue after iteration_003.
+
+  - source_id: local_feature_inventory
+    path: outputs/qqq_r2_mmdi_v1_3_1_all_feature_inventory.csv
+    type: feature_inventory
+    relevance: Current exported column universe used for redundancy and coverage checks.
+
+  - source_id: local_feature_universe
+    path: FEATURE_UNIVERSE.md
+    type: repository_documentation
+    relevance: Feature families and live sentiment caveat.
+
+external_sources:
+  - source_id: ext_bis_market_stress_ml_2025
+    title: Predicting financial market stress with machine learning
+    authors: Aldasoro, Hordahl, Schrimpf, Zhu
+    url: https://www.bis.org/publ/work1250.htm
+    publication_date: 2025-03-17
+    type: working_paper
+    relevance: Market condition indicators for Treasury, FX, and money markets; cross-market spillovers; liquidity and global-cycle predictors.
+
+  - source_id: ext_fed_volatility_models_2025
+    title: "Linear and nonlinear econometric models against machine learning models: realized volatility prediction"
+    url: https://www.federalreserve.gov/econres/feds/linear-and-nonlinear-econometric-models-against-machine-learning-models.htm
+    publication_date: 2025
+    type: working_paper
+    relevance: Regime-switching HAR-style volatility models can outperform more complex ML in realized volatility and risk forecasts.
+
+  - source_id: ext_ofr_fsi
+    title: OFR Financial Stress Index
+    url: https://www.financialresearch.gov/financial-stress-index/
+    type: official_monitor
+    relevance: Daily market stress framework spanning credit, equity valuation, funding, safe assets, and volatility; useful category template and release-lag reminder.
+
+  - source_id: ext_backtest_overfit_2024
+    title: Backtest Overfitting in the Machine Learning Era
+    url: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4686376
+    publication_date: 2024-01-06
+    type: research_paper
+    relevance: Reinforces purged/combinatorial validation concerns for non-stationary financial data and false discovery risk.
+
+  - source_id: ext_regime_aware_vol_2026
+    title: Regime-aware Financial Volatility Forecasting via In-Context Learning
+    url: https://arxiv.org/html/2603.10299v1
+    publication_date: 2026
+    type: preprint
+    relevance: Highlights heavy tails, abrupt regime shifts, and context-dependent volatility forecast degradation.
+
+  - source_id: ext_vit_realized_vol_2025
+    title: Data-Efficient Realized Volatility Forecasting with Vision Transformers
+    url: https://arxiv.org/html/2511.03046v1
+    publication_date: 2025
+    type: preprint
+    relevance: Shows model performance varies across market conditions and data windows; supports regime-aware feature stability rather than fixed one-size signals.
+
+  - source_id: ext_news_rv_forecasting
+    title: "Realised Volatility Forecasting: Machine Learning via Financial Word Embedding"
+    url: https://arxiv.org/html/2108.00480v6
+    type: preprint
+    relevance: News can add volatility information, especially in high-volatility regimes, but requires point-in-time news archives.
+
+  - source_id: ext_cross_modal_temporal_fusion_2025
+    title: Cross-Modal Temporal Fusion for Financial Market Forecasting
+    url: https://arxiv.org/html/2504.13522v2
+    publication_date: 2025
+    type: preprint
+    relevance: Structured plus textual data fusion can improve market prediction, but text modalities need strict point-in-time controls.
+
+  - source_id: ext_tradingagents_2024
+    title: "TradingAgents: Multi-Agents LLM Financial Trading Framework"
+    url: https://arxiv.org/abs/2412.20138
+    publication_date: 2024
+    type: preprint
+    relevance: Multi-agent finance systems separate technical, sentiment, fundamental, bull/bear, and risk-management roles; useful for idea taxonomy, not historical features without archived outputs.
+
+  - source_id: ext_agentic_trading_survey_2026
+    title: "Agentic Trading: When LLM Agents Meet Financial Markets"
+    url: https://arxiv.org/html/2605.19337v1
+    publication_date: 2026
+    type: survey_preprint
+    relevance: Frames agents as auditable expert-system pipelines; emphasizes temporal splits, cost assumptions, and reproducible artifacts.
+
+  - source_id: ext_finance_llm_agents_survey_2025
+    title: Large Language Model Agents in Finance
+    url: https://aclanthology.org/2025.findings-emnlp.972.pdf
+    publication_date: 2025
+    type: survey_paper
+    relevance: Finance LLM deployment challenges include numerical reasoning, stress robustness, privacy, compliance, and agent coordination.
+
+  - source_id: ext_finrobot_2024
+    title: "FinRobot: An Open-Source AI Agent Platform for Financial Applications using Large Language Models"
+    url: https://arxiv.org/abs/2405.14767
+    publication_date: 2024-05-23
+    type: preprint
+    relevance: Financial AI agent layers and DataOps/LLMOps discipline; useful for source-governed feature ideation and audit workflows.
+
+  - source_id: ext_fingpt_2023_2025_revision
+    title: "FinGPT: Open-Source Financial Large Language Models"
+    url: https://arxiv.org/abs/2306.06031
+    publication_date: 2023-06-09
+    last_revised: 2025-11-15
+    type: preprint
+    relevance: Data-centric finance LLM approach; reinforces curation, provenance, and transparent data pipelines.
+
+usage_notes:
+  no_external_source_used_as_backtest_feature_directly: true
+  external_sources_used_for_feature_ideation_only: true
+  live_text_or_llm_outputs_require_point_in_time_archive: true
+  production_dashboard_changes_allowed: false

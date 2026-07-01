@@ -1,0 +1,51 @@
+version: 1
+batch_id: FD_001_batch_A_v2
+generated_at_utc: '2026-07-01T06:23:21+00:00'
+input_file: outputs\qqq_r2_mmdi_v1_3_1_all_features_daily_wide.csv
+output_directory: feature_lab\FD_001_batch_A_v2
+production_files_modified: false
+hypothesis_tests_run: false
+features:
+  FREQ_008:
+    title: Regime-shift volatility disagreement
+    output_columns:
+    - freq_008_vol_disagreement_score
+    - freq_008_vol_disagreement_score_pct
+    - freq_008_vol_disagreement_rank_change_20d
+    - freq_008_vol_disagreement_flag
+    status: candidate_hypothesis_design
+    formula_note: Formula unchanged from Batch A; rolling percentile-normalized components
+      are averaged.
+  FREQ_007:
+    title: Volatility term-structure stress persistence
+    output_columns:
+    - freq_007_vol_term_daily_stress_count
+    - freq_007_vol_term_stress_persistence_5d
+    - freq_007_vol_term_stress_persistence_20d
+    - freq_007_vol_term_persistent_stress_flag
+    status: candidate_hypothesis_design_with_descriptive_flag
+    qa_patch_note: Availability includes vol_term_inversion_flag; safe boolean conversion
+      preserves missingness.
+    descriptive_only_columns:
+    - freq_007_vol_term_persistent_stress_flag
+  FREQ_010:
+    title: Safe-haven rotation confirmation
+    output_columns:
+    - freq_010_safe_haven_confirmation_score
+    - freq_010_rates_led_stress_flag
+    - freq_010_riskoff_confirmation_flag
+    - freq_010_safe_haven_rotation_state
+    status: context_only_not_alert_ready
+    state_values:
+    - treasury_and_defensive_bid
+    - treasury_only_safe_haven
+    - defensive_only_rotation
+    - rates_led_stress
+    - mixed_defensive_rates_stress
+    - unconfirmed
+artifacts:
+- experimental_feature_snapshot.csv
+- experimental_feature_inventory.csv
+- coverage_summary.csv
+- validation_summary.md
+- feature_snapshot_manifest.yaml

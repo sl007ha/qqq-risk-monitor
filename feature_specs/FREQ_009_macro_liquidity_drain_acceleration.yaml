@@ -1,0 +1,63 @@
+version: 1
+feature_id: FREQ_009
+title: Macro liquidity drain acceleration
+status: proposed_feature
+source_type: market_mechanism
+source_references:
+  - feature_research/FD_001/extracted_feature_ideas.yaml
+  - https://www.bis.org/publ/work1250.htm
+  - https://www.financialresearch.gov/financial-stress-index/
+source_hypotheses:
+  - I002_H002
+  - I003_H005
+
+economic_mechanism: Faster liquidity withdrawal and tighter financial conditions can leave high-duration tech assets more fragile even before volatility spikes.
+raw_inputs:
+  - walcl
+  - liquidity_regime
+  - liquidity_drain_proxy
+  - fed_policy_regime
+  - fed_surprise_30d
+  - nfci
+formula: Combine 20D and 63D changes in liquidity, financial conditions, and policy regime proxies into an acceleration score.
+data_source: Current FRED-derived exported columns.
+expected_direction: Higher drain acceleration should imply higher future QQQ drawdown risk.
+candidate_hypothesis_use: Cross-asset stress and false-calm confirmation.
+point_in_time_risk: Medium. Weekly and monthly macro series have release timing and revision risks.
+leakage_risks:
+  - Align weekly/monthly observations to actual release availability.
+  - Avoid forward-filling unreleased future observations.
+redundancy_check:
+  inventory_file: outputs/qqq_r2_mmdi_v1_3_1_all_feature_inventory.csv
+  related_existing_columns:
+    - liquidity_regime
+    - liquidity_drain_proxy
+    - fed_policy_regime
+    - fed_surprise_30d
+    - nfci
+  result: partially_redundant
+  notes: Existing proxies are present; multi-horizon acceleration across liquidity and policy is not represented.
+coverage_requirement:
+  minimum_start_date: 2003-01-01
+  minimum_non_null_fraction: 0.60
+  minimum_event_coverage_review: required
+implementation_plan:
+  allowed_location: feature_lab/FREQ_009_macro_liquidity_drain_acceleration/
+  production_files_touched: []
+  experimental_outputs:
+    - feature_lab/FREQ_009_macro_liquidity_drain_acceleration/outputs/experimental_feature_snapshot.csv
+validation_plan:
+  - Audit release lags for WALCL, NFCI, and FEDFUNDS.
+  - Report coverage and missingness by component.
+  - Compare against existing liquidity_drain_proxy.
+classification:
+  historical_use: research_only
+  live_sentiment_or_headline: false
+  point_in_time_archive_required: false
+implementation_complexity: medium
+production_promotion_status:
+  allowed_without_human_approval: false
+  human_approval_required_for:
+    - production feature construction
+    - dashboard integration
+    - protected file edits

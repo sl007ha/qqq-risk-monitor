@@ -1,0 +1,348 @@
+version: 1
+iteration_id: FD_001
+as_of: 2026-07-01
+idea_count: 20
+promoted_to_specs_count: 10
+production_changes_allowed: false
+hypothesis_tests_run: false
+
+feature_ideas:
+  - idea_id: FREQ_001
+    title: Cross-asset stress sequence score
+    promoted_to_spec: true
+    source: [local_rewrite_queue, local_feature_requests, ext_bis_market_stress_ml_2025]
+    economic_mechanism: Cross-asset stress often propagates through credit, rates, FX, and volatility before equity damage becomes visible.
+    raw_inputs: [credit_spread_20d_change, ig_oas_change_20d, ust10y_change_20d, dxy_change_20d, vix_change_20d, vix9d_vs_vix]
+    formula: Count pre-declared stress flags across credit, rates, dollar, and volatility over 5D and 20D windows; add a sequence flag when at least two non-equity stress families deteriorate before QQQ drawdown acceleration.
+    data_source: Current exported feature inventory.
+    expected_direction: Higher sequence score should imply higher future acute shock risk and better lead time.
+    point_in_time_risk: Low to medium; FRED release timing and market close alignment must be documented.
+    coverage_expectation: Medium to high; limited by shorter IG OAS and VIX term structure histories.
+    redundancy_check:
+      related_existing_columns: [credit_spread_20d_change, ig_oas_change_20d, ust10y_change_20d, dxy_change_20d, vix_change_20d]
+      assessment: Partially redundant levels and changes exist; sequence ordering across families is not currently represented.
+    candidate_hypotheses: [I002_H002 successor, RQ004 false-calm confirmation overlay]
+    implementation_complexity: medium
+
+  - idea_id: FREQ_002
+    title: Funding liquidity pressure bundle
+    promoted_to_spec: true
+    source: [ext_bis_market_stress_ml_2025, ext_ofr_fsi, local_feature_requests]
+    economic_mechanism: Funding stress can tighten risk appetite and force deleveraging before broad equity drawdowns.
+    raw_inputs: [nfci, sofr_spread_proxy, fedfunds, credit_spread, hy_ig_spread, liquidity_regime]
+    formula: Combine percentile-ranked funding and credit pressure, requiring deterioration across at least two funding/liquidity proxies.
+    data_source: Current FRED-derived exported columns plus existing liquidity proxies.
+    expected_direction: Higher funding pressure should increase future drawdown and acute-shock risk.
+    point_in_time_risk: Medium; macro series release lags and revisions must be handled.
+    coverage_expectation: Medium; SOFR begins in 2018 and some credit series have shorter history.
+    redundancy_check:
+      related_existing_columns: [nfci, sofr_spread_proxy, credit_spread, hy_ig_spread, liquidity_regime]
+      assessment: Existing columns are individual proxies; the bundle would test combined funding pressure.
+    candidate_hypotheses: [cross-asset acute shock, false-calm burden reduction]
+    implementation_complexity: medium
+
+  - idea_id: FREQ_003
+    title: False-calm internal deterioration count
+    promoted_to_spec: true
+    source: [local_rewrite_queue, local_iteration_003_analysis, local_iteration_003_decision_log]
+    economic_mechanism: Calm dashboard states can hide accumulating internal damage when R2 is quiet but breadth, volatility, trend, or MMDI components deteriorate.
+    raw_inputs: [R2_ACTIVE, R2_STRESS_COUNT, MMDI, MMDI_10D_CHANGE, mmdi_20d_change, downside_vol_20d, price_vs_ma50, qqq_dd_20d]
+    formula: During non-active R2 states, count independent internal deterioration families using pre-declared training-window quantiles or fixed signs.
+    data_source: Current exported feature inventory.
+    expected_direction: Higher hidden deterioration count should increase future path-risk odds while reducing broad false-calm alerts.
+    point_in_time_risk: Low; inputs are historical market-derived features available through each date.
+    coverage_expectation: High from 1999 except columns with rolling-window warmup.
+    redundancy_check:
+      related_existing_columns: [R2_ACTIVE, R2_STRESS_COUNT, MMDI, MMDI_10D_CHANGE, mmdi_20d_change]
+      assessment: Existing columns include components; explicit false-calm conditional count is not present.
+    candidate_hypotheses: [I003_H005 rewrite, RQ004_FALSE_CALM_BURDEN_REDUCTION]
+    implementation_complexity: low
+
+  - idea_id: FREQ_004
+    title: Repair episode quality score
+    promoted_to_spec: true
+    source: [local_feature_requests, local_iteration_003_analysis, local_iteration_003_decision_log]
+    economic_mechanism: Failed repairs are episodic; bounce durability and reclaim failures may matter more than a single repair-state observation.
+    raw_inputs: [qqq_close, qqq_dd_20d, qqq_dd_60d, rebound_from_trough_20d, failed_reclaim_ma50, failed_reclaim_ma200, lower_high_flag, lower_low_flag, mmdi_low_after_high]
+    formula: Score repair episodes after drawdown by combining rebound size, failed reclaim count, lower-high/lower-low flags, and MMDI relapse during the repair window.
+    data_source: Current exported feature inventory.
+    expected_direction: Lower repair quality should increase future repair-failure or path-risk probability.
+    point_in_time_risk: Low; price-derived and MMDI-derived fields are date-local if constructed from trailing data.
+    coverage_expectation: High after rolling-window warmups.
+    redundancy_check:
+      related_existing_columns: [failed_reclaim_ma50, failed_reclaim_ma200, lower_high_flag, lower_low_flag, rebound_from_trough_20d]
+      assessment: Components exist; episode-level aggregation and repair-window conditioning are new.
+    candidate_hypotheses: [repair_failure successor, false-calm confirmation overlay]
+    implementation_complexity: medium
+
+  - idea_id: FREQ_005
+    title: Downside-volatility persistence ratio
+    promoted_to_spec: true
+    source: [local_rewrite_queue, local_iteration_003_analysis, ext_fed_volatility_models_2025, ext_regime_aware_vol_2026]
+    economic_mechanism: Persistent downside volatility is more informative than isolated volatility spikes because it indicates sustained pressure rather than transient noise.
+    raw_inputs: [downside_vol_20d, upside_vol_20d, downside_upside_vol_ratio, realized_skew_20d, large_red_day_count_20d, gap_down_count_20d]
+    formula: Ratio of days in the trailing 20D/60D windows with downside-volatility stress, negative skew, or repeated red-day/gap stress.
+    data_source: Current exported feature inventory.
+    expected_direction: Higher persistence should increase future 30BD path-risk odds and fold stability.
+    point_in_time_risk: Low; all inputs are trailing market-derived values.
+    coverage_expectation: High after volatility warmup windows.
+    redundancy_check:
+      related_existing_columns: [downside_vol_20d, downside_upside_vol_ratio, realized_skew_20d, large_red_day_count_20d, gap_down_count_20d]
+      assessment: Existing daily levels exist; persistence/duration of stress is not directly represented.
+    candidate_hypotheses: [I002_H001 event-level comparison, I003_H001 comparison]
+    implementation_complexity: low
+
+  - idea_id: FREQ_006
+    title: Leadership context gate
+    promoted_to_spec: true
+    source: [local_rewrite_queue, local_feature_requests, local_iteration_003_decision_log]
+    economic_mechanism: Narrow leadership can be useful as context, but broad leadership alerts become too burdensome when used alone.
+    raw_inputs: [qqq_vs_qqqe_3m, qqq_vs_iwm_3m, qqq_vs_soxx_3m, soxx_vs_spy_3m, mag7_equal_weight_vs_qqq, mag7_breadth]
+    formula: Context gate that requires persistent leadership divergence or semiconductor non-confirmation only when another risk candidate is active.
+    data_source: Current exported feature inventory.
+    expected_direction: Leadership deterioration should raise risk conditional on false-calm or downside-volatility stress.
+    point_in_time_risk: Medium; ETF proxies are historical, but Mag7 composition is fixed and must be treated as proxy-based, not constituent-universe proof.
+    coverage_expectation: Medium; QQQE and some relatives begin later than QQQ.
+    redundancy_check:
+      related_existing_columns: [qqq_vs_qqqe_3m, qqq_vs_iwm_3m, soxx_vs_spy_3m, mag7_breadth]
+      assessment: Existing relative-strength levels exist; conditional context gate is new.
+    candidate_hypotheses: [I002_H003 context overlay, I003_H005 burden reduction]
+    implementation_complexity: medium
+
+  - idea_id: FREQ_007
+    title: Volatility term-structure stress persistence
+    promoted_to_spec: true
+    source: [ext_ofr_fsi, ext_vit_realized_vol_2025, local_feature_inventory]
+    economic_mechanism: Persistent front-vol elevation and term-structure inversion reflect sustained hedging demand and may lead equity drawdown risk.
+    raw_inputs: [vix9d_vs_vix, vix3m_vs_vix, vol_term_inversion_flag, vvix_level, skew_index, panic_vol_flag]
+    formula: Rolling count of days with front-vol inversion, elevated VVIX/SKEW, or panic-vol flags over 5D and 20D windows.
+    data_source: Current exported feature inventory.
+    expected_direction: Higher persistence should increase near-term path-risk and acute-shock odds.
+    point_in_time_risk: Low to medium; Yahoo index histories may have shorter coverage or vendor revisions.
+    coverage_expectation: Medium; VIX9D/VIX3M/VVIX/SKEW histories are shorter than QQQ.
+    redundancy_check:
+      related_existing_columns: [vix9d_vs_vix, vix3m_vs_vix, vol_term_inversion_flag, vvix_level, skew_index]
+      assessment: Daily flags exist; persistence across the term structure is not explicitly encoded.
+    candidate_hypotheses: [downside-volatility comparison, false-calm confirmation]
+    implementation_complexity: low
+
+  - idea_id: FREQ_008
+    title: Regime-shift volatility disagreement
+    promoted_to_spec: true
+    source: [ext_fed_volatility_models_2025, ext_regime_aware_vol_2026, ext_vit_realized_vol_2025]
+    economic_mechanism: Volatility forecast models degrade around regime changes; disagreement between short-term realized volatility, long-term realized volatility, and market-implied volatility can mark unstable regimes.
+    raw_inputs: [qqq_vol_10d, qqq_vol_20d, qqq_vol_60d, realized_vol_252d, vix, vxn, vol_20d_vs_252d]
+    formula: Compare short realized volatility, longer realized volatility, and implied volatility proxies; flag widening disagreement and abrupt rank changes.
+    data_source: Current exported feature inventory.
+    expected_direction: Higher disagreement should increase regime-shift and path-risk odds.
+    point_in_time_risk: Low; market-derived trailing and same-day close fields.
+    coverage_expectation: High for QQQ/VIX, medium where VXN is missing before 2001.
+    redundancy_check:
+      related_existing_columns: [vol_20d_vs_252d, vix, vxn, qqq_vol_20d, qqq_vol_60d]
+      assessment: Ratios exist; three-way disagreement and rank-change construct is distinct.
+    candidate_hypotheses: [I002_H001 comparison, false-calm burden reduction]
+    implementation_complexity: low
+
+  - idea_id: FREQ_009
+    title: Macro liquidity drain acceleration
+    promoted_to_spec: true
+    source: [ext_bis_market_stress_ml_2025, ext_ofr_fsi, local_feature_inventory]
+    economic_mechanism: Rapid tightening in liquidity or central-bank balance-sheet support can amplify risk-asset fragility.
+    raw_inputs: [walcl, liquidity_regime, liquidity_drain_proxy, fed_policy_regime, fed_surprise_30d, nfci]
+    formula: Combine changes in balance-sheet liquidity, financial conditions, and policy regime into an acceleration score using trailing 20D/63D differences.
+    data_source: Current FRED-derived exported columns.
+    expected_direction: Higher drain acceleration should increase future drawdown and false-calm risk.
+    point_in_time_risk: Medium; FRED release dates and revisions require audit.
+    coverage_expectation: Medium; WALCL begins in 2002, SOFR later, and macro release schedules differ.
+    redundancy_check:
+      related_existing_columns: [liquidity_regime, liquidity_drain_proxy, fed_policy_regime, fed_surprise_30d, nfci]
+      assessment: Existing proxies are present; acceleration across them is not currently represented.
+    candidate_hypotheses: [cross-asset stress, false-calm confirmation]
+    implementation_complexity: medium
+
+  - idea_id: FREQ_010
+    title: Safe-haven rotation confirmation
+    promoted_to_spec: true
+    source: [ext_ofr_fsi, ext_bis_market_stress_ml_2025, local_feature_inventory]
+    economic_mechanism: Risk-off periods often combine equity stress with safe-haven demand in Treasuries or defensive assets; failed safe-haven support can separate inflation/rates stress from classic de-risking.
+    raw_inputs: [tlt_ret_20d, ief_ret_20d, tlt_ief_rel_3m, xlu_vs_spy_3m, xlp_vs_spy_3m, ust10y_change_20d]
+    formula: Classify risk-off confirmation versus rates-led stress by comparing Treasury returns, curve/yield changes, and defensive sector relatives.
+    data_source: Current exported feature inventory.
+    expected_direction: Risk-off confirmation should increase acute shock risk; rates-led stress without Treasury support may increase tech fragility.
+    point_in_time_risk: Low for ETF/yield daily market data; medium for missing early histories.
+    coverage_expectation: Medium to high depending on ETF start dates.
+    redundancy_check:
+      related_existing_columns: [tlt_ret_20d, ief_ret_20d, tlt_ief_rel_3m, xlu_vs_spy_3m, xlp_vs_spy_3m]
+      assessment: Existing relatives exist; stress-regime classification is new.
+    candidate_hypotheses: [cross-asset acute shock, leadership context overlay]
+    implementation_complexity: low
+
+  - idea_id: FREQ_011
+    title: Implied-volatility surface curvature stress
+    promoted_to_spec: false
+    source: [ext_vit_realized_vol_2025]
+    economic_mechanism: Options surfaces can encode crash demand and variance risk before realized volatility rises.
+    raw_inputs: [option implied volatility surface by tenor and moneyness]
+    formula: Track skew curvature, term structure, and surface deformation over trailing windows.
+    data_source: Future options data requirement.
+    expected_direction: Higher put-skew curvature or front-tenor surface stress should increase drawdown risk.
+    point_in_time_risk: High; requires licensed point-in-time options surface snapshots.
+    coverage_expectation: Unknown until data source is approved.
+    redundancy_check:
+      related_existing_columns: [vix, vxn, skew_index, vix9d_vs_vix]
+      assessment: Current proxies exist but not full options surface geometry.
+    candidate_hypotheses: [volatility surface lead-time candidate]
+    implementation_complexity: high
+
+  - idea_id: FREQ_012
+    title: News volatility attention state
+    promoted_to_spec: false
+    source: [ext_news_rv_forecasting, ext_cross_modal_temporal_fusion_2025, local_feature_universe]
+    economic_mechanism: News content can add volatility information, especially during high-volatility regimes.
+    raw_inputs: [archived news headlines, timestamps, source, finance-specific embeddings]
+    formula: Daily point-in-time news attention and risk-topic score, interacted with volatility regime.
+    data_source: Future point-in-time news archive; current live RSS is current-context-only.
+    expected_direction: Higher risk-topic attention during elevated volatility should increase future RV/path risk.
+    point_in_time_risk: High unless archived point-in-time with timestamps and publication lag.
+    coverage_expectation: Unknown; current live RSS is not historical.
+    redundancy_check:
+      related_existing_columns: [headline_sentiment_score, headline_risk_score, headline_count]
+      assessment: Current headline fields are live snapshots only and cannot be used for historical tests.
+    candidate_hypotheses: [current-context dashboard annotation, not historical backtest]
+    implementation_complexity: high
+
+  - idea_id: FREQ_013
+    title: LLM risk-agent disagreement index
+    promoted_to_spec: false
+    source: [ext_tradingagents_2024, ext_agentic_trading_survey_2026, ext_finance_llm_agents_survey_2025]
+    economic_mechanism: Disagreement among specialized risk agents may reveal ambiguous, unstable market states.
+    raw_inputs: [archived agent outputs, prompts, model versions, source documents]
+    formula: Dispersion across bull, bear, technical, sentiment, and risk-management agent scores.
+    data_source: Future archived agent-output store.
+    expected_direction: Higher disagreement should indicate uncertain regimes and higher model-risk/path-risk.
+    point_in_time_risk: High; requires frozen prompts, model versions, retrieval corpus, and timestamps.
+    coverage_expectation: None in current repo.
+    redundancy_check:
+      related_existing_columns: []
+      assessment: No historical agent-output inventory exists.
+    candidate_hypotheses: [agentic research governance, current-context monitor]
+    implementation_complexity: high
+
+  - idea_id: FREQ_014
+    title: Agent source-provenance confidence score
+    promoted_to_spec: false
+    source: [ext_finrobot_2024, ext_fingpt_2023_2025_revision, ext_agentic_trading_survey_2026]
+    economic_mechanism: Lower source provenance or unstable data curation should reduce confidence in generated risk narratives.
+    raw_inputs: [retrieval source count, citation freshness, source agreement, model version]
+    formula: Penalize narratives with sparse sources, stale sources, or conflicting source clusters.
+    data_source: Future agent workflow logs.
+    expected_direction: Lower provenance confidence should reduce reliance on narrative features rather than directly predict QQQ risk.
+    point_in_time_risk: High; depends on archived workflow metadata.
+    coverage_expectation: None in current repo.
+    redundancy_check:
+      related_existing_columns: []
+      assessment: Governance meta-feature, not current market feature.
+    candidate_hypotheses: [LLM workflow quality control]
+    implementation_complexity: high
+
+  - idea_id: FREQ_015
+    title: External financial stress index delta
+    promoted_to_spec: false
+    source: [ext_ofr_fsi]
+    economic_mechanism: Broad financial stress indices may summarize cross-market strain that is not fully captured by local proxies.
+    raw_inputs: [OFR FSI level, OFR FSI category contributions]
+    formula: Rolling change and percentile of OFR FSI total and category contributions.
+    data_source: External OFR data feed.
+    expected_direction: Higher FSI and faster increases should increase drawdown risk.
+    point_in_time_risk: Medium; OFR publishes with lag and revisions need audit.
+    coverage_expectation: Unknown until downloaded and checked.
+    redundancy_check:
+      related_existing_columns: [credit_spread, nfci, vix, liquidity_regime]
+      assessment: Could be redundant with existing stress proxies; category contributions may add breadth.
+    candidate_hypotheses: [cross-market stress comparison]
+    implementation_complexity: medium
+
+  - idea_id: FREQ_016
+    title: Credit-equity divergence duration
+    promoted_to_spec: false
+    source: [local_feature_requests, ext_bis_market_stress_ml_2025]
+    economic_mechanism: Credit deterioration while QQQ remains strong may indicate underpriced equity risk.
+    raw_inputs: [credit_not_confirming_equity, credit_worsening_equity_up, qqq_ret_1m, credit_spread_20d_change]
+    formula: Active run length of credit-worsening-equity-up flags.
+    data_source: Current exported feature inventory.
+    expected_direction: Longer divergence should increase future shock risk.
+    point_in_time_risk: Low to medium; credit release alignment must be checked.
+    coverage_expectation: High with fallback BAA10Y, shorter for HY/IG OAS.
+    redundancy_check:
+      related_existing_columns: [credit_not_confirming_equity, credit_worsening_equity_up, credit_spread_20d_change]
+      assessment: Mostly a duration transform of existing explicit divergence flags; not promoted because it is narrower than FREQ_001.
+    candidate_hypotheses: [cross-asset acute shock]
+    implementation_complexity: low
+
+  - idea_id: FREQ_017
+    title: Intraday realized-volatility shock signature
+    promoted_to_spec: false
+    source: [ext_fed_volatility_models_2025]
+    economic_mechanism: Intraday realized volatility and jump signatures can detect stress before daily closes.
+    raw_inputs: [5-minute QQQ or NDX bars, intraday realized variance, jump measures]
+    formula: Daily aggregation of intraday jump variation and realized semivariance.
+    data_source: Future intraday data requirement.
+    expected_direction: Higher downside intraday jump stress should increase short-horizon shock risk.
+    point_in_time_risk: Medium to high; requires complete historical intraday feed and market-calendar handling.
+    coverage_expectation: Unknown.
+    redundancy_check:
+      related_existing_columns: [realized_vol_21d, downside_vol_20d, gap_down_count_20d]
+      assessment: Daily proxies exist; intraday jump information is absent.
+    candidate_hypotheses: [acute shock early warning]
+    implementation_complexity: high
+
+  - idea_id: FREQ_018
+    title: Defensive sector rotation confirmation
+    promoted_to_spec: false
+    source: [ext_ofr_fsi, local_feature_inventory]
+    economic_mechanism: Defensive sector outperformance can confirm risk-off behavior or distinguish ordinary tech weakness from broader de-risking.
+    raw_inputs: [xlp_vs_spy_3m, xlu_vs_spy_3m, xlv_vs_spy_3m, xly_vs_xlp_3m]
+    formula: Count defensive-relative-strength confirmations over trailing 20D/60D windows.
+    data_source: Current exported feature inventory.
+    expected_direction: Strong defensive rotation should increase broad market stress odds, but may not improve QQQ-specific lead time alone.
+    point_in_time_risk: Low; ETF market data.
+    coverage_expectation: High after ETF starts.
+    redundancy_check:
+      related_existing_columns: [xlp_vs_spy_3m, xlu_vs_spy_3m, xlv_vs_spy_3m, xly_vs_xlp_3m]
+      assessment: Likely redundant with FREQ_010 safe-haven rotation, so not promoted separately.
+    candidate_hypotheses: [safe-haven context]
+    implementation_complexity: low
+
+  - idea_id: FREQ_019
+    title: Liquidity-volume downside asymmetry
+    promoted_to_spec: false
+    source: [local_feature_inventory, ext_bis_market_stress_ml_2025]
+    economic_mechanism: Heavy volume on down days and rising illiquidity may show forced selling before price damage fully appears.
+    raw_inputs: [qqq_volume_z_20d, dollar_volume_z_20d, volume_on_down_days, up_down_volume_ratio_20d, amihud_illiquidity_proxy]
+    formula: Down-volume share times illiquidity proxy, with confirmation from abnormal volume.
+    data_source: Current exported feature inventory.
+    expected_direction: Higher downside liquidity asymmetry should increase path-risk odds.
+    point_in_time_risk: Low; derived from QQQ OHLCV.
+    coverage_expectation: High after volume warmups.
+    redundancy_check:
+      related_existing_columns: [volume_on_down_days, up_down_volume_ratio_20d, amihud_illiquidity_proxy]
+      assessment: Useful but lower priority because current columns already express much of the mechanism.
+    candidate_hypotheses: [downside-volatility confirmation]
+    implementation_complexity: low
+
+  - idea_id: FREQ_020
+    title: Label-overlap evaluation risk marker
+    promoted_to_spec: false
+    source: [ext_backtest_overfit_2024]
+    economic_mechanism: Overlapping forward drawdown labels can inflate apparent signal quality if evaluation folds are not purged.
+    raw_inputs: [target_horizon, event dates, fold dates, alert dates]
+    formula: Flag hypotheses where label windows overlap train/test boundaries or where alert clusters dominate fold results.
+    data_source: Research test outputs, not production feature inventory.
+    expected_direction: Higher evaluation risk should reduce confidence in hypothesis results, not predict market risk.
+    point_in_time_risk: Not a market feature; evaluation governance artifact.
+    coverage_expectation: Available only after hypothesis tests exist.
+    redundancy_check:
+      related_existing_columns: []
+      assessment: Not a production feature and not promoted to feature spec.
+    candidate_hypotheses: [evaluation QA for future tests]
+    implementation_complexity: medium

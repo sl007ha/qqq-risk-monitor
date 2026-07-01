@@ -1,0 +1,64 @@
+version: 1
+feature_id: FREQ_006
+title: Leadership context gate
+status: proposed_feature
+source_type: prior_iteration_failure
+source_references:
+  - feature_research/FD_001/extracted_feature_ideas.yaml
+  - feature_backlog/feature_requests_from_hypotheses.yaml
+  - research_iterations/iteration_003/decision_log.md
+source_hypotheses:
+  - I002_H003
+  - I003_H003
+  - I003_H005
+
+economic_mechanism: Leadership deterioration can add context to other stress signals, but broad leadership alerts are too burdensome as standalone warnings.
+raw_inputs:
+  - qqq_vs_qqqe_3m
+  - qqq_vs_iwm_3m
+  - qqq_vs_soxx_3m
+  - soxx_vs_spy_3m
+  - mag7_equal_weight_vs_qqq
+  - mag7_breadth
+formula: Create a context gate that turns on only when persistent leadership deterioration or semiconductor non-confirmation coincides with a separate false-calm or downside-volatility candidate.
+data_source: Current exported feature inventory.
+expected_direction: Leadership deterioration should raise risk conditional on another alert, and may reduce false positives by acting as a second-stage gate.
+candidate_hypothesis_use: Context overlay for I003_H005 or downside-volatility candidates; not standalone.
+point_in_time_risk: Medium. ETF relatives are date-local, but Mag7 fixed basket is proxy-based and should not be interpreted as historical index membership.
+leakage_risks:
+  - Do not use future constituent membership.
+  - Do not promote leadership gate as standalone without separate hypothesis evidence.
+redundancy_check:
+  inventory_file: outputs/qqq_r2_mmdi_v1_3_1_all_feature_inventory.csv
+  related_existing_columns:
+    - qqq_vs_qqqe_3m
+    - qqq_vs_iwm_3m
+    - qqq_vs_soxx_3m
+    - soxx_vs_spy_3m
+    - mag7_breadth
+  result: distinct
+  notes: Existing relatives are standalone levels; conditional gate behavior is new.
+coverage_requirement:
+  minimum_start_date: 2012-03-21
+  minimum_non_null_fraction: 0.50
+  minimum_event_coverage_review: required
+implementation_plan:
+  allowed_location: feature_lab/FREQ_006_leadership_context_gate/
+  production_files_touched: []
+  experimental_outputs:
+    - feature_lab/FREQ_006_leadership_context_gate/outputs/experimental_feature_snapshot.csv
+validation_plan:
+  - Report coverage limits from QQQE and semiconductor data.
+  - Document Mag7 proxy limitations.
+  - Check overlap with false-calm candidates only in a future hypothesis task.
+classification:
+  historical_use: research_only
+  live_sentiment_or_headline: false
+  point_in_time_archive_required: false
+implementation_complexity: medium
+production_promotion_status:
+  allowed_without_human_approval: false
+  human_approval_required_for:
+    - production feature construction
+    - dashboard integration
+    - protected file edits

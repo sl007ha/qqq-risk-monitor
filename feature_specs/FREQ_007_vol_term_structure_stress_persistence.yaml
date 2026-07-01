@@ -1,0 +1,63 @@
+version: 1
+feature_id: FREQ_007
+title: Volatility term-structure stress persistence
+status: proposed_feature
+source_type: market_mechanism
+source_references:
+  - feature_research/FD_001/extracted_feature_ideas.yaml
+  - https://www.financialresearch.gov/financial-stress-index/
+  - https://arxiv.org/html/2511.03046v1
+source_hypotheses:
+  - I002_H001
+  - I003_H005
+
+economic_mechanism: Persistent front-vol elevation, VVIX/SKEW stress, or volatility term inversion can reflect sustained hedging demand before broader price damage.
+raw_inputs:
+  - vix9d_vs_vix
+  - vix3m_vs_vix
+  - vol_term_inversion_flag
+  - vvix_level
+  - skew_index
+  - panic_vol_flag
+formula: Count the share of days over 5D and 20D windows where vol-term inversion, VVIX/SKEW stress, or panic-vol flags are active.
+data_source: Current exported feature inventory.
+expected_direction: Higher persistence should imply higher near-term acute-shock and path-risk probability.
+candidate_hypothesis_use: Volatility confirmation for downside-volatility and false-calm candidates.
+point_in_time_risk: Low to medium. Index histories are market-derived but may have shorter coverage and vendor adjustments.
+leakage_risks:
+  - Use trailing windows only.
+  - Do not backfill missing early histories in a way that creates artificial calm.
+redundancy_check:
+  inventory_file: outputs/qqq_r2_mmdi_v1_3_1_all_feature_inventory.csv
+  related_existing_columns:
+    - vix9d_vs_vix
+    - vix3m_vs_vix
+    - vol_term_inversion_flag
+    - vvix_level
+    - skew_index
+  result: distinct
+  notes: Daily term-structure and tail-demand fields exist; persistence score does not.
+coverage_requirement:
+  minimum_start_date: 2011-01-01
+  minimum_non_null_fraction: 0.50
+  minimum_event_coverage_review: required
+implementation_plan:
+  allowed_location: feature_lab/FREQ_007_vol_term_structure_stress_persistence/
+  production_files_touched: []
+  experimental_outputs:
+    - feature_lab/FREQ_007_vol_term_structure_stress_persistence/outputs/experimental_feature_snapshot.csv
+validation_plan:
+  - Check coverage of VIX9D, VIX3M, VVIX, and SKEW fields.
+  - Document missing-history handling.
+  - Compare against existing panic_vol_flag and vix_percentile_252d.
+classification:
+  historical_use: research_only
+  live_sentiment_or_headline: false
+  point_in_time_archive_required: false
+implementation_complexity: low
+production_promotion_status:
+  allowed_without_human_approval: false
+  human_approval_required_for:
+    - production feature construction
+    - dashboard integration
+    - protected file edits

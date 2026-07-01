@@ -1,0 +1,11 @@
+feature_id,column,feature_role,dtype,latest_value,latest_non_null,non_null_count,coverage_pct,first_valid_date,last_valid_date
+FREQ_003,freq_003_quiet_state,descriptive_only,float64,1.0,True,6869,1.0,1999-03-10,2026-06-30
+FREQ_003,freq_003_false_calm_internal_deterioration_count,candidate_hypothesis_design,float64,1.0,True,6869,1.0,1999-03-10,2026-06-30
+FREQ_003,freq_003_false_calm_missing_component_count,descriptive_only,float64,1.0,True,6869,1.0,1999-03-10,2026-06-30
+FREQ_003,freq_003_false_calm_confirmed_flag,candidate_hypothesis_design,float64,0.0,True,6056,0.8816421604309216,1999-04-19,2026-06-30
+FREQ_003,freq_003_false_calm_possible_flag,candidate_hypothesis_design,float64,0.0,True,6869,1.0,1999-03-10,2026-06-30
+FREQ_003,freq_003_false_calm_unknown_due_to_missing_flag,descriptive_only,float64,0.0,True,6869,1.0,1999-03-10,2026-06-30
+FREQ_004,freq_004_repair_episode_active,episode_diagnostics_only,float64,0.0,True,6810,0.9914106856893289,1999-06-03,2026-06-30
+FREQ_004,freq_004_repair_failure_pressure_count,episode_diagnostics_only,float64,0.0,True,6810,0.9914106856893289,1999-06-03,2026-06-30
+FREQ_004,freq_004_repair_episode_quality_score,episode_diagnostics_only,float64,,False,1104,0.1607220847284903,1999-06-04,2026-04-07
+FREQ_004,freq_004_repair_relapse_flag,episode_diagnostics_only,float64,0.0,True,6810,0.9914106856893289,1999-06-03,2026-06-30

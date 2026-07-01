@@ -1,0 +1,64 @@
+version: 1
+feature_id: FREQ_005
+title: Downside-volatility persistence ratio
+status: proposed_feature
+source_type: prior_iteration_failure
+source_references:
+  - feature_research/FD_001/extracted_feature_ideas.yaml
+  - hypothesis_registry/rewrite_queue.yaml
+  - research_iterations/iteration_003/analysis.md
+  - https://www.federalreserve.gov/econres/feds/linear-and-nonlinear-econometric-models-against-machine-learning-models.htm
+source_hypotheses:
+  - I002_H001
+  - I003_H001
+
+economic_mechanism: Persistent downside volatility is more likely to reflect sustained risk pressure than a one-day spike.
+raw_inputs:
+  - downside_vol_20d
+  - upside_vol_20d
+  - downside_upside_vol_ratio
+  - realized_skew_20d
+  - large_red_day_count_20d
+  - gap_down_count_20d
+formula: Compute the trailing share of days over 20D and 60D windows where downside volatility, downside/upside ratio, negative skew, red-day count, or gap count is in stress.
+data_source: Current exported feature inventory.
+expected_direction: Higher persistence should imply higher future 30BD path-risk odds and better fold stability.
+candidate_hypothesis_use: Compare I002_H001 and I003_H001 at event level before any replacement.
+point_in_time_risk: Low. Inputs are market-derived trailing fields.
+leakage_risks:
+  - Use only trailing windows ending on the signal date.
+  - Do not tune persistence thresholds after seeing hypothesis outcomes.
+redundancy_check:
+  inventory_file: outputs/qqq_r2_mmdi_v1_3_1_all_feature_inventory.csv
+  related_existing_columns:
+    - downside_vol_20d
+    - downside_upside_vol_ratio
+    - realized_skew_20d
+    - large_red_day_count_20d
+    - gap_down_count_20d
+  result: distinct
+  notes: Existing columns provide levels and counts; cross-day persistence ratio is not present.
+coverage_requirement:
+  minimum_start_date: 2008-01-02
+  minimum_non_null_fraction: 0.80
+  minimum_event_coverage_review: required
+implementation_plan:
+  allowed_location: feature_lab/FREQ_005_downside_volatility_persistence_ratio/
+  production_files_touched: []
+  experimental_outputs:
+    - feature_lab/FREQ_005_downside_volatility_persistence_ratio/outputs/experimental_feature_snapshot.csv
+validation_plan:
+  - Report first/latest valid date and non-null share.
+  - Compare persistence with existing daily downside-volatility columns.
+  - Check robustness of 20D versus 60D persistence without outcome optimization.
+classification:
+  historical_use: research_only
+  live_sentiment_or_headline: false
+  point_in_time_archive_required: false
+implementation_complexity: low
+production_promotion_status:
+  allowed_without_human_approval: false
+  human_approval_required_for:
+    - production feature construction
+    - dashboard integration
+    - protected file edits

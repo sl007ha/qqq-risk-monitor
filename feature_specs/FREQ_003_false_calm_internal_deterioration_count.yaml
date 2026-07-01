@@ -1,0 +1,66 @@
+version: 1
+feature_id: FREQ_003
+title: False-calm internal deterioration count
+status: proposed_feature
+source_type: prior_iteration_failure
+source_references:
+  - feature_research/FD_001/extracted_feature_ideas.yaml
+  - hypothesis_registry/rewrite_queue.yaml
+  - research_iterations/iteration_003/analysis.md
+  - research_iterations/iteration_003/decision_log.md
+source_hypotheses:
+  - I002_H005
+  - I003_H005
+
+economic_mechanism: A calm dashboard state can mask internal deterioration. Counting independent stress families during quiet R2 states may reduce false-calm burden while preserving event coverage.
+raw_inputs:
+  - R2_ACTIVE
+  - R2_STRESS_COUNT
+  - MMDI
+  - MMDI_10D_CHANGE
+  - mmdi_20d_change
+  - downside_vol_20d
+  - price_vs_ma50
+  - qqq_dd_20d
+formula: When R2_ACTIVE is false or R2_STRESS_COUNT is below the active threshold, count deterioration flags across MMDI acceleration, downside volatility, trend damage, and drawdown damage using pre-declared thresholds.
+data_source: Current exported feature inventory.
+expected_direction: Higher hidden deterioration count should imply higher future 30BD path-risk odds.
+candidate_hypothesis_use: Main feature for RQ004_FALSE_CALM_BURDEN_REDUCTION.
+point_in_time_risk: Low. Inputs are current exported trailing market-derived features.
+leakage_risks:
+  - Thresholds must be fixed or training-window quantiles only.
+  - Do not inspect future drawdown labels when choosing family weights.
+redundancy_check:
+  inventory_file: outputs/qqq_r2_mmdi_v1_3_1_all_feature_inventory.csv
+  related_existing_columns:
+    - R2_ACTIVE
+    - R2_STRESS_COUNT
+    - MMDI
+    - MMDI_10D_CHANGE
+    - downside_vol_20d
+  result: distinct
+  notes: Existing columns are ingredients; the quiet-state conditional deterioration count is not present.
+coverage_requirement:
+  minimum_start_date: 2008-01-02
+  minimum_non_null_fraction: 0.80
+  minimum_event_coverage_review: required
+implementation_plan:
+  allowed_location: feature_lab/FREQ_003_false_calm_internal_deterioration_count/
+  production_files_touched: []
+  experimental_outputs:
+    - feature_lab/FREQ_003_false_calm_internal_deterioration_count/outputs/experimental_feature_snapshot.csv
+validation_plan:
+  - Verify coverage for all component fields.
+  - Confirm feature is only conditioned on contemporaneous R2/MMDI state.
+  - Compare overlap with I003_H005 alert days in a future hypothesis task, not in FD_001.
+classification:
+  historical_use: research_only
+  live_sentiment_or_headline: false
+  point_in_time_archive_required: false
+implementation_complexity: low
+production_promotion_status:
+  allowed_without_human_approval: false
+  human_approval_required_for:
+    - production feature construction
+    - dashboard integration
+    - protected file edits
