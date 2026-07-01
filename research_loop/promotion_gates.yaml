@@ -1,0 +1,139 @@
+version: 2
+purpose: Machine-readable research-loop gates for QQQ Risk Monitor hypotheses and dashboard candidates.
+
+global_hard_rules:
+  no_invented_features: true
+  exact_features_from_inventory: true
+  no_live_sentiment_backtests_without_point_in_time_archives: true
+  no_threshold_optimization_without_explicit_human_approval: true
+  no_production_dashboard_changes_without_human_approval: true
+  preserve_failed_hypotheses: true
+  evidence_files_required: true
+
+required_metrics:
+  - alert_burden
+  - base_rate_lift
+  - event_coverage
+  - positive_lift_folds
+  - median_lead
+  - alert_days
+
+metric_definitions:
+  alert_days: Count of eligible test days where the hypothesis trigger is true.
+  alert_burden: alert_days / eligible_days.
+  base_hit_rate: target_hits / eligible_days.
+  alert_hit_rate: target_hits_on_alert_days / alert_days.
+  base_rate_lift: alert_hit_rate / base_hit_rate.
+  event_coverage: covered_drawdown_events / total_drawdown_events.
+  false_calm: Target hit or drawdown event without prior alert.
+  positive_lift_folds: Count of yearly folds with base_rate_lift above 1.0.
+  median_lead: Median business-day lead time among covered events.
+
+common_required_artifacts:
+  - prior_results_summary.md
+  - HYPOTHESES.md
+  - hypotheses.yaml
+  - analysis.md
+  - decision_log.md
+  - next_iteration_plan.md
+  - tests summary CSV
+  - tests daily signal CSV
+  - tests events CSV
+
+gates:
+  keep:
+    description: Keep as an active baseline or comparison candidate for future research.
+    minimum_conditions:
+      exact_features_verified: true
+      no_leakage_flags_unresolved: true
+      alert_days_min: 25
+      base_rate_lift_min: 1.25
+      alert_burden_max: 0.20
+      event_coverage_min: 0.20
+      positive_lift_folds_min: 5
+    preferred_conditions:
+      median_lead_min_bd: 1.0
+      false_calm_documented: true
+    human_approval_required: false
+
+  rewrite:
+    description: Mechanism remains plausible, but trigger logic needs a pre-declared revision.
+    conditions_any:
+      - base_rate_lift_between: [0.90, 1.50]
+      - alert_burden_above: 0.15
+      - event_coverage_below: 0.35
+      - positive_lift_folds_below: 7
+      - median_lead_below_bd: 1.0
+      - alert_days_too_sparse_below: 25
+      - alert_days_too_broad_above_fraction_of_eligible: 0.20
+    required_action: Preserve prior result, state failure mode, and propose only pre-declared deterministic changes in a future iteration.
+    human_approval_required: false
+
+  drop:
+    description: Retire the exact formulation while preserving the lesson learned.
+    conditions_any:
+      - base_rate_lift_below: 0.90
+      - event_coverage_equals_zero: true
+      - positive_lift_folds_equals_zero: true
+      - alert_hit_rate_equals_zero: true
+      - repeated_rewrite_failures_at_least: 2
+      - unresolved_leakage_or_data_quality_issue: true
+    required_action: Move to rejected_hypotheses and document why it should not be retested unchanged.
+    human_approval_required: false
+
+  promote_to_combination_test:
+    description: Promote to a research-only combination or overlay test, not dashboard production.
+    minimum_conditions:
+      exact_features_verified: true
+      no_leakage_flags_unresolved: true
+      alert_days_min: 50
+      base_rate_lift_min: 1.30
+      event_coverage_min: 0.35
+      positive_lift_folds_min: 7
+    combination_specific_conditions:
+      complementary_to_existing_active_hypothesis: true
+      failure_mode_documented: true
+      overlap_or_correlation_review_required: true
+    human_approval_required: false
+
+  promote_to_shadow_dashboard:
+    description: Create a shadow dashboard candidate package under dashboard_candidates only.
+    minimum_conditions:
+      exact_features_verified: true
+      no_leakage_flags_unresolved: true
+      alert_days_min: 50
+      base_rate_lift_min: 1.50
+      alert_burden_max: 0.15
+      event_coverage_min: 0.35
+      positive_lift_folds_min: 8
+      median_lead_min_bd: 2.0
+      false_calm_analysis_present: true
+      failure_mode_documentation_present: true
+    required_artifacts:
+      - candidate memo
+      - candidate_rules.yaml
+      - source hypothesis evidence
+      - shadow daily signal
+      - comparison versus current dashboard
+      - approval checklist
+    human_approval_required: true
+
+  production_dashboard_candidate:
+    description: Candidate can be considered for production implementation only after human approval.
+    required_conditions:
+      human_approval_recorded: true
+      shadow_dashboard_reviewed: true
+      comparison_vs_current_dashboard_complete: true
+      implementation_plan_approved: true
+      rollback_or_revert_plan_exists: true
+      production_files_explicitly_in_scope: true
+      protected_file_changes_approved_by_name: true
+    disallowed_without_approval:
+      - qqq_autoresearch/data_sources.py
+      - qqq_autoresearch/features.py
+      - qqq_autoresearch/config.py
+      - qqq_autoresearch/candidate.py
+      - qqq_autoresearch/pipeline.py
+      - qqq_autoresearch/render.py
+      - run_dashboard.py
+    human_approval_required: true

@@ -1,0 +1,1045 @@
+
+You are generating a disciplined QQQ Risk Monitor hypothesis registry.
+
+Follow this program exactly:
+
+<PROGRAM>
+# QQQ Risk Monitor v2 鈥?Hypothesis Generation Program
+
+You are a hypothesis-generation agent, not an optimization agent.
+
+Your job is to propose testable market-risk hypotheses using the available QQQ Risk Monitor feature universe. You should behave like a disciplined quantitative research analyst: start from market mechanism, map it to available features, define the target, specify expected direction, and propose a validation plan.
+
+## Scope
+
+Generate hypotheses only.
+
+Do not:
+- modify dashboard logic
+- modify `qqq_autoresearch/candidate.py`
+- modify R2 or MMDI definitions
+- modify labels, targets, or evaluation logic
+- run optimization
+- tune thresholds for performance
+- create trading recommendations
+- treat live RSS sentiment as historical backtest data unless point-in-time headline archives exist
+
+## Input files
+
+Read these files after running the dashboard locally:
+
+```text
+outputs/qqq_r2_mmdi_v1_3_1_all_feature_inventory.csv
+outputs/qqq_r2_mmdi_v1_3_1_feature_catalog.csv
+outputs/qqq_r2_mmdi_v1_3_1_feature_snapshot_latest.csv
+outputs/qqq_r2_mmdi_v1_3_1_all_features_daily_wide.csv
+outputs/qqq_r2_mmdi_v1_3_1_sentiment_summary.csv
+outputs/qqq_r2_mmdi_v1_3_1_sentiment_headlines.csv
+```
+
+Also read:
+
+```text
+FEATURE_UNIVERSE.md
+README.md
+```
+
+## Primary goal
+
+Generate 20鈥?0 testable hypotheses for QQQ future drawdown risk.
+
+The goal is not to find the best model. The goal is to create a high-quality hypothesis registry that can later be reviewed, prioritized, and tested.
+
+## Target families
+
+Hypotheses may target one or more of the following:
+
+```text
+future 15BD maximum drawdown
+future 30BD maximum drawdown
+future 60BD maximum drawdown
+future 126BD maximum drawdown
+severe drawdown episode coverage
+path-risk amplification
+bearish-return risk
+repair failure / false repair
+acute shock detection
+narrow-leadership fragility
+cross-asset stress confirmation
+```
+
+Distinguish clearly between:
+
+```text
+Path risk:
+  Future path becomes more fragile or drawdown-prone, but median return may still be positive.
+
+Bearish return:
+  Future return is expected to be negative, usually together with a deeper drawdown.
+
+Repair failure:
+  Market stress appears to be improving, but later drawdown still occurs.
+
+Acute shock:
+  Cross-asset or option-market stress indicates fast downside risk.
+```
+
+## Required output files
+
+Create:
+
+```text
+hypotheses/HYPOTHESES.md
+hypotheses/hypotheses.yaml
+```
+
+`HYPOTHESES.md` should be human-readable.
+
+`hypotheses.yaml` should be machine-readable and structured for future experiment automation.
+
+## Required fields for each hypothesis
+
+Each hypothesis must include:
+
+```text
+hypothesis_id
+title
+plain_english_thesis
+economic_market_mechanism
+feature_families_used
+exact_feature_columns_used
+expected_direction
+target_horizon
+target_type
+target_definition
+trigger_logic_pseudocode
+why_this_should_work
+when_this_may_fail
+data_quality_or_leakage_risks
+minimum_data_coverage_requirement
+validation_plan
+dashboard_implication
+priority_score
+```
+
+## Constraints
+
+- Use only features that exist in the output feature inventory, unless clearly labeled as a placeholder / future-data requirement.
+- Prefer hypotheses with clear economic or market-structure logic.
+- Prefer interpretable feature combinations.
+- Avoid using many near-duplicate features from the same correlation cluster.
+- Avoid purely statistical feature mining with no market mechanism.
+- Avoid row-level accuracy thinking; prioritize event-level drawdown coverage, false-calm risk, false-repair risk, lead time, alert burden, and base-rate lift.
+- Distinguish path-risk hypotheses from bearish-return hypotheses.
+- Sentiment / mainstream narrative features are current-context only unless historical point-in-time snapshots exist.
+- Do not use live headline sentiment in historical backtests without point-in-time archives.
+- Do not propose automatic buy/sell rules.
+
+## Priority scoring
+
+Score each hypothesis from 1 to 10 using the following dimensions:
+
+```text
+Economic logic:        25%
+Data availability:     20%
+Orthogonality:         15%
+Target fit:            15%
+Interpretability:      15%
+Leakage risk:          10%
+```
+
+A high-priority hypothesis should have:
+
+```text
+clear mechanism
+usable feature coverage
+limited overlap with existing R2/MMDI logic
+clear target type
+clear validation path
+low leakage risk
+```
+
+## Suggested hypothesis categories
+
+Organize hypotheses into these categories where useful:
+
+```text
+1. Path-risk amplifier
+2. Bear-market rally / false repair
+3. Narrow leadership fragility
+4. Cross-asset stress
+5. Volatility / options stress
+6. Rates / dollar shock
+7. Credit / funding stress
+8. Semiconductor / AI confirmation failure
+9. Macro / regime context
+10. Mainstream narrative / semantic overlay
+```
+
+## Example hypothesis format
+
+```yaml
+- hypothesis_id: H001
+  title: "Range expansion plus semiconductor non-confirmation predicts 30BD path risk"
+  plain_english_thesis: >
+    When QQQ trading range expands while semiconductors stop confirming QQQ strength,
+    the rally is more fragile and future 30BD drawdown risk should rise.
+  economic_market_mechanism: >
+    Range expansion suggests unstable price discovery. Semiconductor non-confirmation
+    suggests the core Nasdaq leadership engine is weakening. Together they may signal
+    path-risk rather than an immediate bearish return forecast.
+  feature_families_used:
+    - Volatility / Range / Path Risk
+    - Semiconductor / AI / Tech Confirmation
+  exact_feature_columns_used:
+    - range_20d_vs_252d
+    - qqq_vs_soxx_6m
+    - soxx_ret_3m
+  expected_direction:
+    range_20d_vs_252d: higher_is_worse
+    qqq_vs_soxx_6m: higher_is_worse
+    soxx_ret_3m: lower_is_worse
+  target_horizon: 30BD
+  target_type: path_risk
+  target_definition: "future 30BD MDD <= -8% or -10%"
+  trigger_logic_pseudocode: >
+    high range_20d_vs_252d AND (high qqq_vs_soxx_6m OR weak soxx_ret_3m)
+  why_this_should_work: >
+    QQQ drawdown risk often rises when price action becomes unstable and core tech
+    leadership stops confirming index strength.
+  when_this_may_fail: >
+    In strong liquidity-driven melt-ups, QQQ can continue rising despite narrow or weak
+    semiconductor confirmation.
+  data_quality_or_leakage_risks: >
+    Requires point-in-time price data only. Low leakage risk if computed using data
+    available at close.
+  minimum_data_coverage_requirement: >
+    At least 10 years of non-null data and enough severe drawdown episodes across regimes.
+  validation_plan:
+    - single feature lift
+    - pair interaction lift
+    - purged walk-forward validation
+    - period concentration check
+    - severe event coverage under alert burden
+  dashboard_implication: >
+    Could become a path-risk warning track, not an automatic bearish signal.
+  priority_score: 9
+```
+
+## Final instruction
+
+Produce hypotheses that are useful for a future experiment queue. Do not optimize them. Do not test them yet. Do not modify any production dashboard code.
+
+</PROGRAM>
+
+Feature-universe documentation:
+
+<FEATURE_UNIVERSE>
+# QQQ Risk Monitor v2 Feature Universe
+
+This repository now includes an additive v2 feature-universe layer for future Autoresearch / Codex experiments.
+
+The current v1.3.1 R2 脳 MMDI dashboard signal is **not changed**. The new layer only adds extra public data, computes additional research features, and exports feature/sentiment tables.
+
+## New feature families
+
+```text
+A. Price / Trend Structure
+B. Drawdown / Distance from High
+C. Volatility / Range / Path Risk
+D. Momentum / Reversal
+E. Breadth / Market Internals
+F. Leadership / Relative Strength
+G. Semiconductor / AI / Tech Confirmation
+H. Rates / Yield Curve
+I. Credit / Funding Stress
+J. Vol / Options / Tail Stress
+K. Macro / Regime Context
+L. Liquidity / Volume / Flow
+M. Mainstream Narrative / Semantic
+```
+
+## New outputs
+
+After running:
+
+```bash
+python run_dashboard.py --output-dir outputs
+```
+
+you will still get the main dashboard HTML. You will also get:
+
+```text
+outputs/qqq_r2_mmdi_v1_3_1_feature_catalog.csv
+outputs/qqq_r2_mmdi_v1_3_1_feature_snapshot_latest.csv
+outputs/qqq_r2_mmdi_v1_3_1_sentiment_summary.csv
+outputs/qqq_r2_mmdi_v1_3_1_sentiment_headlines.csv
+```
+
+The dashboard HTML also appends feature-universe and mainstream narrative / semantic sections near the bottom.
+
+## Important caveat on sentiment
+
+The mainstream narrative / semantic panel uses live Google News RSS headline snapshots and transparent keyword scoring. It is useful for current dashboard context, but it is **not historical/backtest-ready** unless headline snapshots are archived point-in-time.
+
+Do not use the live RSS sentiment score in historical model optimization until a point-in-time headline archive exists.
+
+</FEATURE_UNIVERSE>
+
+Available feature inventory sample. Use column names exactly as shown.
+
+<ALL_FEATURE_INVENTORY_SAMPLE>
+family_guess,column,dtype,latest_value,non_null_count,coverage_pct,first_valid_date,last_valid_date
+
+A. Price / Trend Structure,days_above_ma50,int64,57.0,6868,1.0,1999-03-10,2026-06-29
+
+A. Price / Trend Structure,days_below_ma200,int64,0.0,6868,1.0,1999-03-10,2026-06-29
+
+A. Price / Trend Structure,failed_reclaim_ma200,bool,False,6868,1.0,1999-03-10,2026-06-29
+
+A. Price / Trend Structure,failed_reclaim_ma50,bool,False,6868,1.0,1999-03-10,2026-06-29
+
+A. Price / Trend Structure,macd_hist,float64,-3.1130209781045988,6868,1.0,1999-03-10,2026-06-29
+
+A. Price / Trend Structure,macd_line,float64,3.7528934931340245,6868,1.0,1999-03-10,2026-06-29
+
+A. Price / Trend Structure,macd_signal,float64,6.865914471238623,6868,1.0,1999-03-10,2026-06-29
+
+A. Price / Trend Structure,mag7_breadth,float64,0.7142857142857143,6868,1.0,1999-03-10,2026-06-29
+
+A. Price / Trend Structure,price_cross_ma200_20d,bool,False,6868,1.0,1999-03-10,2026-06-29
+
+A. Price / Trend Structure,price_cross_ma50_10d,bool,False,6868,1.0,1999-03-10,2026-06-29
+
+A. Price / Trend Structure,tail_hedge_demand_flag,bool,False,6868,1.0,1999-03-10,2026-06-29
+
+A. Price / Trend Structure,macd_hist_change,float64,-2.08700528905241,6863,0.9992719860221316,1999-03-17,2026-06-29
+
+A. Price / Trend Structure,ma_20d,float64,723.4927001953125,6849,0.9972335468841002,1999-04-07,2026-06-29
+
+A. Price / Trend Structure,price_vs_ma20,float64,0.0008117799866849129,6849,0.9972335468841002,1999-04-07,2026-06-29
+
+A. Price / Trend Structure,dist_50dma,float64,0.02883419897072348,6819,0.99286546301689,1999-05-19,2026-06-29
+
+A. Price / Trend Structure,ma20_vs_ma50,float64,0.02799968939655284,6819,0.99286546301689,1999-05-19,2026-06-29
+
+A. Price / Trend Structure,ma_50d,float64,703.7868859863281,6819,0.99286546301689,1999-05-19,2026-06-29
+
+A. Price / Trend Structure,price_vs_ma50,float64,0.02883419897072348,6819,0.99286546301689,1999-05-19,2026-06-29
+
+A. Price / Trend Structure,mag7_equal_weight_vs_qqq,float64,-0.13124347240153966,6808,0.9912638322655796,1999-06-04,2026-06-29
+
+A. Price / Trend Structure,unemployment_trend,float64,-0.10000000000000053,6789,0.9884973791496796,1999-07-01,2026-06-29
+
+A. Price / Trend Structure,ma_100d,float64,651.939447631836,6769,0.985585323238206,1999-07-30,2026-06-29
+
+A. Price / Trend Structure,price_vs_ma100,float64,0.11065532193220973,6769,0.985585323238206,1999-07-30,2026-06-29
+
+A. Price / Trend Structure,macro_uncertainty_proxy,float64,1.4084111715081395,6723,0.9788875946418172,1999-10-05,2026-06-29
+
+A. Price / Trend Structure,dist_200dma,float64,0.14680102318801924,6669,0.9710250436808386,1999-12-21,2026-06-29
+
+A. Price / Trend Structure,ma50_vs_ma200,float64,0.11466067548620895,6669,0.9710250436808386,1999-12-21,2026-06-29
+
+A. Price / Trend Structure,ma_200d,float64,631.3911502075196,6669,0.9710250436808386,1999-12-21,2026-06-29
+
+A. Price / Trend Structure,price_vs_ma200,float64,0.14680102318801924,6669,0.9710250436808386,1999-12-21,2026-06-29
+
+A. Price / Trend Structure,ma200_slope_20d,float64,0.024740759809156687,6649,0.9681129877693652,2000-01-20,2026-06-29
+
+A. Price / Trend Structure,ma200_slope_60d,float64,0.06544963097126844,6609,0.9622888759464182,2000-03-17,2026-06-29
+
+A. Price / Trend Structure,large_vs_small_3m,float64,-0.06704063626990542,6500,0.9464181712288876,2000-08-22,2026-06-29
+
+B. Drawdown / Distance,high_low_range_1d,float64,0.02752532672985386,6868,1.0,1999-03-10,2026-06-29
+
+B. Drawdown / Distance,lower_high_flag,bool,False,6868,1.0,1999-03-10,2026-06-29
+
+B. Drawdown / Distance,lower_low_flag,bool,False,6868,1.0,1999-03-10,2026-06-29
+
+B. Drawdown / Distance,underwater_days_52w,int64,18.0,6868,1.0,1999-03-10,2026-06-29
+
+B. Drawdown / Distance,qqq_dd_20d,float64,-0.028525020953326208,6849,0.9972335468841002,1999-04-07,2026-06-29
+
+B. Drawdown / Distance,qqq_dd_60d,float64,-0.028525020953326208,6809,0.9914094350611532,1999-06-03,2026-06-29
+
+B. Drawdown / Distance,dd_from_63d_high,float64,-0.028525020953326208,6806,0.9909726266744322,1999-06-08,2026-06-29
+
+B. Drawdown / Distance,high_63d,float64,745.3408813476562,6806,0.9909726266744322,1999-06-08,2026-06-29
+
+B. Drawdown / Distance,dd_from_126d_high,float64,-0.028525020953326208,6743,0.9817996505532908,1999-09-07,2026-06-29
+
+B. Drawdown / Distance,high_126d,float64,745.3408813476562,6743,0.9817996505532908,1999-09-07,2026-06-29
+
+B. Drawdown / Distance,qqq_dd_126d,float64,-0.028525020953326208,6743,0.9817996505532908,1999-09-07,2026-06-29
+
+B. Drawdown / Distance,dd_from_252d_high,float64,-0.028525020953326208,6617,0.9634536983110076,2000-03-07,2026-06-29
+
+B. Drawdown / Distance,dist_52w_high,float64,-0.028525020953326208,6617,0.9634536983110076,2000-03-07,2026-06-29
+
+B. Drawdown / Distance,dist_52w_low,float64,0.33012895044584956,6617,0.9634536983110076,2000-03-07,2026-06-29
+
+B. Drawdown / Distance,high_252d,float64,745.3408813476562,6617,0.9634536983110076,2000-03-07,2026-06-29
+
+B. Drawdown / Distance,qqq_dd_252d,float64,-0.028525020953326208,6617,0.9634536983110076,2000-03-07,2026-06-29
+
+B. Drawdown / Distance,drawdown_speed_20d,float64,-0.028525020953326208,6597,0.960541642399534,2000-04-04,2026-06-29
+
+B. Drawdown / Distance,qqqe_qqq_ratio_252d_high,float64,0.17951811484113003,3337,0.4858765288293535,2013-03-22,2026-06-29
+
+B. Drawdown / Distance,qqqe_qqq_ratio_dd,float64,-0.06951147726151852,3337,0.4858765288293535,2013-03-22,2026-06-29
+
+C/J. Volatility / Options,panic_vol_flag,bool,False,6868,1.0,1999-03-10,2026-06-29
+
+C/J. Volatility / Options,skew_index,float64,144.4600067138672,6868,1.0,1999-03-10,2026-06-29
+
+C/J. Volatility / Options,vix_level,float64,17.649999618530273,6868,1.0,1999-03-10,2026-06-29
+
+C/J. Volatility / Options,vol_crush_after_spike,bool,False,6868,1.0,1999-03-10,2026-06-29
+
+C/J. Volatility / Options,vol_term_inversion_flag,bool,False,6868,1.0,1999-03-10,2026-06-29
+
+C/J. Volatility / Options,vix_change_5d,float64,0.3699989318847656,6863,0.9992719860221316,1999-03-17,2026-06-29
+
+C/J. Volatility / Options,dollar_volume_z_20d,float64,-0.48701275001405286,6859,0.9986895748398368,1999-03-23,2026-06-29
+
+C/J. Volatility / Options,qqq_volume_z_20d,float64,-0.47594969338940074,6859,0.9986895748398368,1999-03-23,2026-06-29
+
+C/J. Volatility / Options,qqq_vol_10d,float64,0.33647259285458203,6858,0.9985439720442632,1999-03-24,2026-06-29
+
+C/J. Volatility / Options,atr_pct_14,float64,0.027019164977388672,6855,0.9981071636575424,1999-03-29,2026-06-29
+
+C/J. Volatility / Options,gap_down_count_20d,float64,4.0,6849,0.9972335468841002,1999-04-07,2026-06-29
+
+
+</ALL_FEATURE_INVENTORY_SAMPLE>
+
+Feature catalog sample:
+
+<FEATURE_CATALOG_SAMPLE>
+family,feature,status,latest_available,non_null_count,source_note
+
+A. Price / Trend Structure,price_vs_ma20,available,True,6849,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,price_vs_ma50,available,True,6819,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,price_vs_ma100,available,True,6769,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,price_vs_ma200,available,True,6669,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,ma20_vs_ma50,available,True,6819,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,ma50_vs_ma200,available,True,6669,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,ma200_slope_20d,available,True,6649,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,ma200_slope_60d,available,True,6609,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,price_cross_ma50_10d,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,price_cross_ma200_20d,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,days_above_ma50,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,days_below_ma200,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,failed_reclaim_ma50,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,failed_reclaim_ma200,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,qqq_dd_20d,available,True,6849,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,qqq_dd_60d,available,True,6809,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,qqq_dd_126d,available,True,6743,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,qqq_dd_252d,available,True,6617,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,dist_52w_high,available,True,6617,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,dist_52w_low,available,True,6617,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,underwater_days_52w,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,drawdown_speed_20d,available,True,6597,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,rebound_from_trough_20d,available,True,6849,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,lower_high_flag,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,lower_low_flag,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,range_5d_vs_252d,available,True,6617,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,range_20d_vs_252d,available,True,6617,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,high_low_range_1d,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,atr_pct_14,available,True,6855,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,qqq_vol_10d,available,True,6858,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,qqq_vol_20d,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,qqq_vol_60d,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,vol_20d_vs_60d,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,vol_20d_vs_252d,available,True,6616,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,downside_vol_20d,available,True,2830,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,upside_vol_20d,available,True,4929,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,downside_upside_vol_ratio,available,True,919,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,gap_down_count_20d,available,True,6849,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,large_red_day_count_20d,available,True,6849,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,realized_skew_20d,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,realized_kurt_20d,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,qqq_ret_1w,available,True,6863,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,qqq_ret_2w,available,True,6858,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,qqq_ret_1m,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,qqq_ret_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,qqq_ret_6m,available,True,6742,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,qqq_ret_12m,available,True,6616,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,tsmom_1m_sign,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,tsmom_3m_sign,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,tsmom_6m_sign,available,True,6742,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,tsmom_12m_sign,available,True,6616,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,vol_adj_mom_60d,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,vol_adj_mom_126d,available,True,6742,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,mom_1m_minus_6m,available,True,6742,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,reversal_5d_after_60d_runup,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,rsi_14,available,True,6853,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,rsi_25,available,True,6843,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,macd_signal,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,macd_hist_change,available,True,6863,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,mmdi_level,available,True,6418,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,mmdi_5d_change,available,True,6413,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,mmdi_10d_change,available,True,6408,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,mmdi_20d_change,available,True,6398,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,mmdi_percentile_252d,available,True,6293,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,mmdi_falling_from_high,available,True,6167,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,mmdi_low_after_high,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,advance_decline_line_20d,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+E. Breadth / Market Internals,pct_above_20dma,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+E. Breadth / Market Internals,pct_above_50dma,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+E. Breadth / Market Internals,pct_above_200dma,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+E. Breadth / Market Internals,new_highs_lows_20d,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+E. Breadth / Market Internals,nasdaq_adv_dec_ratio,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+E. Breadth / Market Internals,qqq_equal_weight_rel,available,True,3588,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,qqq_vs_qqqe_3m,available,True,3528,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,qqq_vs_qqqe_6m,available,True,3462,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,qqq_vs_rsp_3m,available,True,5767,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,qqq_vs_iwm_3m,available,True,6500,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,qqq_vs_iwm_6m,available,True,6434,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,qqq_vs_spy_1m,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,qqq_vs_spy_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,qqq_vs_dia_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,qqq_vs_iwm_3m,available,True,6500,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,qqq_vs_rsp_3m,available,True,5767,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,qqq_vs_qqqe_3m,available,True,3528,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,xlk_vs_spy_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,xly_vs_xlp_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,xlf_vs_spy_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,xli_vs_spy_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,xlv_vs_spy_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,xlp_vs_spy_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,xlu_vs_spy_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,mtum_vs_qual_3m,available,True,3196,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,growth_vs_value_3m,available,True,5767,Public market/FRED/Yahoo-derived feature.
+
+F. Leadership / Relative Strength,large_vs_small_3m,available,True,6500,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,soxx_ret_1m,available,True,6256,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,soxx_ret_3m,available,True,6216,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,soxx_ret_6m,available,True,6150,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,qqq_vs_soxx_1m,available,True,6256,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,qqq_vs_soxx_3m,available,True,6216,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,qqq_vs_soxx_6m,available,True,6150,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,soxx_vs_spy_3m,available,True,6216,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,smh_vs_qqq_3m,available,True,6495,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,nvda_vs_qqq_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,msft_vs_qqq_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,aapl_vs_qqq_3m,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,mag7_equal_weight_vs_qqq,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,mag7_breadth,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,semis_failure_flag,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+G. Semiconductor / AI / Tech Confirmation,qqq_up_soxx_down_20d,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+H. Rates / Yield Curve,ust2y_change_20d,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+H. Rates / Yield Curve,ust10y_change_20d,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+H. Rates / Yield Curve,real_yield_10y_change_20d,available,True,5889,Public market/FRED/Yahoo-derived feature.
+
+H. Rates / Yield Curve,tlt_ret_20d,available,True,5997,Public market/FRED/Yahoo-derived feature.
+
+H. Rates / Yield Curve,ief_ret_20d,available,True,5997,Public market/FRED/Yahoo-derived feature.
+
+H. Rates / Yield Curve,tlt_ief_rel_3m,available,True,5957,Public market/FRED/Yahoo-derived feature.
+
+H. Rates / Yield Curve,yield_curve_10y2y,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+H. Rates / Yield Curve,yield_curve_10y3m,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+H. Rates / Yield Curve,curve_steepening_20d,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+H. Rates / Yield Curve,rate_vol_proxy,available,True,5943,Public market/FRED/Yahoo-derived feature.
+
+H. Rates / Yield Curve,dxy_change_20d,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+H. Rates / Yield Curve,usd_yield_shock,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,hy_oas_level,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,hy_oas_change_20d,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,ig_oas_level,available,True,751,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,ig_oas_change_20d,available,True,731,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,hy_ig_spread,available,True,751,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,hyg_ret_20d,available,True,4815,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,lqd_ret_20d,available,True,5997,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,hyg_vs_lqd_20d,available,True,4815,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,credit_spread_accel_20d,available,True,6828,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,ted_spread_proxy,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,sofr_spread_proxy,available,True,2071,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,credit_not_confirming_equity,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+I. Credit / Funding Stress,credit_worsening_equity_up,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,vix_level,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,vix_change_5d,available,True,6863,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,vix_change_20d,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,vix_percentile_252d,available,True,6743,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,vix9d_vs_vix,available,True,3894,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,vix3m_vs_vix,available,True,5019,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,vol_term_inversion_flag,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,vvix_level,available,True,4902,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,skew_index,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,put_call_ratio,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+J. Vol / Options / Tail Stress,qqq_iv_rv_spread,available,True,6395,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,tail_hedge_demand_flag,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,panic_vol_flag,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+J. Vol / Options / Tail Stress,vol_crush_after_spike,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+K. Macro / Regime Context,inflation_regime,available,True,6600,Public market/FRED/Yahoo-derived feature.
+
+K. Macro / Regime Context,inflation_surprise,available,True,6579,Public market/FRED/Yahoo-derived feature.
+
+K. Macro / Regime Context,growth_regime,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+K. Macro / Regime Context,unemployment_trend,available,True,6789,Public market/FRED/Yahoo-derived feature.
+
+K. Macro / Regime Context,claims_trend,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+K. Macro / Regime Context,fed_policy_regime,available,True,6868,Public market/FRED/Yahoo-derived feature.
+
+K. Macro / Regime Context,fed_surprise_30d,available,True,6822,Public market/FRED/Yahoo-derived feature.
+
+K. Macro / Regime Context,real_rate_regime,available,True,5909,Public market/FRED/Yahoo-derived feature.
+
+K. Macro / Regime Context,liquidity_regime,available,True,5855,Public market/FRED/Yahoo-derived feature.
+
+K. Macro / Regime Context,financial_conditions_index,available,True,6866,Public market/FRED/Yahoo-derived feature.
+
+K. Macro / Regime Context,earnings_revision_trend,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+K. Macro / Regime Context,valuation_regime,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+K. Macro / Regime Context,ai_capex_risk_proxy,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+K. Macro / Regime Context,macro_uncertainty_proxy,available,True,6723,Public market/FRED/Yahoo-derived feature.
+
+L. Liquidity / Volume / Flow,qqq_volume_z_20d,available,True,6859,Public market/FRED/Yahoo-derived feature.
+
+L. Liquidity / Volume / Flow,dollar_volume_z_20d,available,True,6859,Public market/FRED/Yahoo-derived feature.
+
+L. Liquidity / Volume / Flow,obv_20d_chg,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+L. Liquidity / Volume / Flow,obv_60d_chg,available,True,6808,Public market/FRED/Yahoo-derived feature.
+
+L. Liquidity / Volume / Flow,up_down_volume_ratio_20d,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+L. Liquidity / Volume / Flow,volume_on_down_days,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+L. Liquidity / Volume / Flow,volume_on_up_days,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+L. Liquidity / Volume / Flow,etf_flow_qqq_20d,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+L. Liquidity / Volume / Flow,arkk_vs_qqq_3m,available,True,2870,Public market/FRED/Yahoo-derived feature.
+
+L. Liquidity / Volume / Flow,margin_debt_change,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+L. Liquidity / Volume / Flow,liquidity_drain_proxy,available,True,5855,Public market/FRED/Yahoo-derived feature.
+
+L. Liquidity / Volume / Flow,market_depth_proxy,placeholder,False,0,Placeholder: requires additional point-in-time data source.
+
+L. Liquidity / Volume / Flow,amihud_illiquidity_proxy,available,True,6848,Public market/FRED/Yahoo-derived feature.
+
+M. Mainstream Narrative / Semantic,headline_sentiment_score,missing,False,0,Live RSS headline snapshot; not historical/backtest-ready unless archived point-in-time.
+
+M. Mainstream Narrative / Semantic,headline_risk_score,missing,False,0,Live RSS headline snapshot; not historical/backtest-ready unless archived point-in-time.
+
+M. Mainstream Narrative / Semantic,headline_euphoria_score,missing,False,0,Live RSS headline snapshot; not historical/backtest-ready unless archived point-in-time.
+
+M. Mainstream Narrative / Semantic,headline_ai_score,missing,False,0,Live RSS headline snapshot; not historical/backtest-ready unless archived point-in-time.
+
+M. Mainstream Narrative / Semantic,headline_recession_score,missing,False,0,Live RSS headline snapshot; not historical/backtest-ready unless archived point-in-time.
+
+M. Mainstream Narrative / Semantic,headline_count,missing,False,0,Live RSS headline snapshot; not historical/backtest-ready unless archived point-in-time.
+
+M. Mainstream Narrative / Semantic,headline_negative_share,missing,False,0,Live RSS headline snapshot; not historical/backtest-ready unless archived point-in-time.
+
+M. Mainstream Narrative / Semantic,headline_positive_share,missing,False,0,Live RSS headline snapshot; not historical/backtest-ready unless archived point-in-time.
+
+
+</FEATURE_CATALOG_SAMPLE>
+
+Latest feature snapshot sample:
+
+<LATEST_FEATURE_SNAPSHOT_SAMPLE>
+family,feature,latest_value,status,source_note
+
+A. Price / Trend Structure,price_vs_ma20,0.0008117799866849129,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,price_vs_ma50,0.02883419897072348,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,price_vs_ma100,0.11065532193220973,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,price_vs_ma200,0.14680102318801924,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,ma20_vs_ma50,0.02799968939655284,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,ma50_vs_ma200,0.11466067548620895,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,ma200_slope_20d,0.024740759809156687,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,ma200_slope_60d,0.06544963097126844,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,price_cross_ma50_10d,False,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,price_cross_ma200_20d,False,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,days_above_ma50,57,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,days_below_ma200,0,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,failed_reclaim_ma50,False,available,Public market/FRED/Yahoo-derived feature.
+
+A. Price / Trend Structure,failed_reclaim_ma200,False,available,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,qqq_dd_20d,-0.028525020953326208,available,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,qqq_dd_60d,-0.028525020953326208,available,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,qqq_dd_126d,-0.028525020953326208,available,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,qqq_dd_252d,-0.028525020953326208,available,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,dist_52w_high,-0.028525020953326208,available,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,dist_52w_low,0.33012895044584956,available,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,underwater_days_52w,18,available,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,drawdown_speed_20d,-0.028525020953326208,available,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,rebound_from_trough_20d,0.04495628049154843,available,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,lower_high_flag,False,available,Public market/FRED/Yahoo-derived feature.
+
+B. Drawdown / Distance from High,lower_low_flag,False,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,range_5d_vs_252d,0.08995511084717152,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,range_20d_vs_252d,0.2388257096926325,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,high_low_range_1d,0.02752532672985386,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,atr_pct_14,0.027019164977388672,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,qqq_vol_10d,0.33647259285458203,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,qqq_vol_20d,0.33487330214199373,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,qqq_vol_60d,0.23391144367936095,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,vol_20d_vs_60d,1.4316242800032835,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,vol_20d_vs_252d,1.8474238619914896,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,downside_vol_20d,0.2308855265415095,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,upside_vol_20d,,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,downside_upside_vol_ratio,,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,gap_down_count_20d,4.0,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,large_red_day_count_20d,2.0,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,realized_skew_20d,-0.27231165167549526,available,Public market/FRED/Yahoo-derived feature.
+
+C. Volatility / Range / Path Risk,realized_kurt_20d,0.09376599129738411,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,qqq_ret_1w,-0.01879530440782251,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,qqq_ret_2w,0.004901629847407163,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,qqq_ret_1m,-0.018195936967648985,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,qqq_ret_3m,0.24056706668091632,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,qqq_ret_6m,0.16325500037309815,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,qqq_ret_12m,0.33200443457785056,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,tsmom_1m_sign,-1.0,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,tsmom_3m_sign,1.0,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,tsmom_6m_sign,1.0,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,tsmom_12m_sign,1.0,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,vol_adj_mom_60d,1.0284536014863757,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,vol_adj_mom_126d,0.6872602500739926,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,mom_1m_minus_6m,-0.18145093734074713,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,reversal_5d_after_60d_runup,False,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,rsi_14,52.5198797997315,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,rsi_25,51.99229791058041,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,macd_signal,6.865914471238623,available,Public market/FRED/Yahoo-derived feature.
+
+D. Momentum / Reversal,macd_hist_change,-2.08700528905241,available,Public market/FRED/Yahoo-derived feature.
+
+E. Breadth / Market Internals,mmdi_level,57.638888888888886,available,Public market/FRED/Yahoo-derived feature.
+
+
+</LATEST_FEATURE_SNAPSHOT_SAMPLE>
+
+Mainstream narrative / semantic summary:
+
+<SENTIMENT_SUMMARY>
+as_of_utc,headline_count,headline_sentiment_score,headline_risk_score,headline_euphoria_score,headline_ai_score,headline_recession_score,headline_negative_share,headline_positive_share,important_caveat
+
+2026-06-30T09:38:42+00:00,100,-0.09,0.56,0.58,0.9,0.0,0.2,0.11,Live RSS headline semantics only; not historical/backtest-ready unless snapshots are archived point-in-time.
+
+
+</SENTIMENT_SUMMARY>
+
+Recent mainstream narrative / semantic headlines sample. Remember: live RSS sentiment is current-context only, not historical/backtest-ready.
+
+<SENTIMENT_HEADLINES_SAMPLE>
+source,query,published,title,link,positive_terms,negative_terms,risk_terms
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 19:59:19 GMT",More Nasdaq 100 ETFs Are Coming. That Means More Buyers For SpaceX Stock - Investopedia,https://news.google.com/rss/articles/CBMiugFBVV95cUxNMWtaeFlfU3gxQW1SWHFLYVpxNXp3Wk15NWZ3QUJjSUhLdmhqd2h0NjVTZW5BRmhDc2NoWHB3S3NHRnFyTHB4U2RUVnpXbHZ4VjBKTDRHREZRRmhqUmlJbGQ5WmlrYTR2WnZiVDVKbUNCbkJzWHBMTHFzN24wOHFiU0w2eDZCRlE0c1QwSlJZbjJsMHFNVDdFUFRRRHVwMnQxakdMMXV2WGhPRHFwMWZTeXpJODMwVkJRQ1E?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 19:33:19 GMT","SpaceX Will Join the Nasdaq-100 on July 7. Here's What a $10,000 Investment Could Be Worth in December, According to History. - Yahoo Finance",https://news.google.com/rss/articles/CBMilwFBVV95cUxNSzFJRVY5U3dHaEpyTmMyN1M4cVBvVG9xSUNHV0hWcmw4bi1KdW9aZ1JYX0hfazBBS2VueFZ4NGFVN0NaaXpsYjhBNlhfTVdZTGVyMWpVTUhwTjFjd0xEb3p0MGQwVGFWQXpIdGx5ZHowdmlJc3VHUkEyTURqb1lydmQ5RVRBOXN5eTRud2FRb2llWXp3N3Y0?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 20:27:24 GMT","US Futures Up as Dip Buyers Lift Tech, US-Iran Hostilities Fade - Bloomberg.com",https://news.google.com/rss/articles/CBMiswFBVV95cUxOaklrdnRKaWQxOUhlYWtQYXA3THVzQXVDQ3lMcDlJeGxPQVFoVE1rYl8tbFBUWjg2RHdVV3kwcXRvN25SSFc4bktwU3hnWE9PUTQtV1Bpak1iOU1KU1lNc3FfMlpFczRsM2lJVlhodkt1T2gwRUVvODJZc0ZxdUZNNktraTJHMTdXNDczV18tM2NUbWtUS3BIdmdESDhoUUVJTkMzbkt3UktxUWFhV1M5Ul9RNA?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 12:39:51 GMT","SpaceX is joining the Nasdaq-100 index: Timeline, date, impact on QQQ, 401(k) plans, and more - Fast Company",https://news.google.com/rss/articles/CBMilAFBVV95cUxQY0l5WXhUeWp4eDR3a3lyc3Q0bWt0cElET1U0Y2pSQllFNmEzcGxkc0FSdHlHZHQ5TjJXV3VOdEQ4TXh6emxmYUl2alNuT1pSSXFqcHNvWEhmQ0VDcGIzdmNONXRqY2ZqOFFpaWNQUFZnYVc3NERUdkhRVmJ6cVdOdjRBeEdVMlVDbFFFS0RBVWdyeGhP?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 17:09:00 GMT",SpaceX Stock Options Are Now Cheap With Nasdaq-100 Inclusion Upcoming - Investor's Business Daily,https://news.google.com/rss/articles/CBMiswFBVV95cUxPX1ZPUlE0N0lfVHhHRHdWMVFPb0w4UHFWRjlJVWlMOHdIVHl3eGpKa3psMTBiaVZ1enl0MkdMeDhHbHNpQm9lNjlzOGIwbGFmSXItWldidjQwQzVEQUdJYzJUVWlCMTUyaGpYVzdqaVNtWWx6Z3pYT1V5RV9seUgwQVlRTGZPdkN6ZDBtam54bGFXUDVYSDBKYTQ4cUlxaDFCTnI4VHl6QU84bWVNbGt2STJYRQ?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Sat, 27 Jun 2026 00:10:00 GMT",SpaceX to join the Nasdaq-100 in a fast-tracked process that will drive huge ETF buying demand - CNBC,https://news.google.com/rss/articles/CBMicEFVX3lxTFBuWkNhSWlFM1lDY2NKX1F6ZmhlU09ZVmluR1NOWlBtZDh3cDZzQmhodEV5dXozUDZRMjFPaVFfM1FobFBPUEZFRjl1ZEpDQktnREdoVXVXU0I3MjJ5TGJ2MTNITzk3elZpX0t4cGt1czXSAXZBVV95cUxQdlQ1ZzllZnhjZl84NHhxZnFYV1NpNGgxTUtndm80ejFYcmFoUmt6bDNGVG1Gb0Y1TldLYnJtSjNlWEI1ajlVTWI4LVY0QkhrWGxxRTJrODlLc1ppeTF5aUJXY1oza256aVROTkZ5NzhtUzVQRHB3?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 21:30:00 GMT",Should You Buy SpaceX Stock Before It Gets Added to the Nasdaq-100? - The Motley Fool,https://news.google.com/rss/articles/CBMijAFBVV95cUxQX2lTYkdUZFUtS1Z0U3I5YmNURE9RRzU4WmczZldTVTV0S0VDWXR4WHdBN3VoeDRUMUhLWTlBYmpVNVJDaFlDQllIN1VZXzlROC1mRWx2SEdIRTBMbWQ2VUNqOWJuMnZuekdqZl9nZWc2SV9nR1l2V3pFN25zY1hQVVVGYTA0eG90VldNSw?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 10:58:40 GMT",2 Nasdaq 100 Stocks Worth Your Attention and 1 We Brush Off - StockStory,https://news.google.com/rss/articles/CBMivgFBVV95cUxQM1NQeHcxU2VzVTlzWjcySVZ3Z2F3OGFUc3g5bEFTakU0bjJMV3JQQmc0bE1Ib0t3N1JJaF9HUXc0bGp5Zm5zOFVRYzNTRlBTdjBZNjY5Y3ZCbnd4V2hPR3NFTk9NS1VXdXVLbDdTNU5tNVA4QV82SWpqemtoWWctbGhkYk1PczdwLTRmaUg3aTh0SkJGVGVvczZiM3M3aFVpemxUcGZWSnNweUJTaUZ5aFctMm9zNDYwbTlHM0Zn?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Tue, 30 Jun 2026 01:24:52 GMT",SpaceX (SPCX) Stock Heads To The Nasdaq 100 As It Buys Cursor - simplywall.st,https://news.google.com/rss/articles/CBMi4AFBVV95cUxON0NiVjZkN09VRThJY2swcHh0Z055bldWTXlpMThiLUVkUnVKVDVBQWxkczZWZ1VXX3JQbkVWYzZMdFBGSFVSQ1F4NEMwZm8zSjR6dk9zM0tldllVRDVUSk45Y3dIX0dZb2VGVm1PTzc0SGRZTUVvRzRhcGR4V3NtMkMtUG5xNWd4a0J5enNrb3JtTjVEZm1ta2RpaFNCUDFvX09mSDJuRzJRUm56elQ4N1NDSVdsOEFOQml6Y3l6bFh6MUNSb2Z5QTZhT0p6R3dpVkJCaWkzYXBfaG5VUjJmZtIB5gFBVV95cUxPdnh2OWtGVGNGREpVaDAwUVY2YTk1OXhJZnpNX3FTREdUbHJUSkQ3eHpEdHRJYloyRjN3dmNHbUhJWjY1SWJhVnBQQ1RPRUZSYjB1d0F6M24xXzZJZDFlQ0ZwVWtBWkw2U0ZNdUY3dDdobFJTR28yakpOdFFXZFJfZkd6eHBWemRYUDhieEV5WTEzLWotWXhYc05mbmY4enJQdlR3Uld1aDR0SFBGWnRqb1lPb1ZHWk1LLTVvbHdvWG1veXc1VU1FR21HdGhVclBoQlF0eC1Cal9lUTN0VkE4ZTlVNTg1dw?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 22:49:17 GMT","Wall Street ends higher as US, Iran attacks ease; major tech-related shares jump - Reuters",https://news.google.com/rss/articles/CBMiqAFBVV95cUxQbGhfTkRBNnFnWmRfbmpsUFZjNHByR1hpUHhzMU12ZEhnQmx0cmk5bkpneU9CdmI1X01JVl9qMXZoWEg4X0dOV1Q5QnduaFJSSXB2eTRMM0l3TUQ0RGU3RzRma0V4MGd0XzhHWU5INzdSMkp0NG51QUc4OWg4T09YUGJ4OGUtVGo3Vm5wN09lbEJ3RTZSeWc1Q0dhWTZZYU42VlhkRVZ0dlk?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Tue, 30 Jun 2026 01:18:06 GMT",What Future Earnings Are QQQM鈥檚 Companies Forecasting? - Trefis,https://news.google.com/rss/articles/CBMiswFBVV95cUxQcU9ZdGduR0hDeTBSRHlpVDExLWNiRHluSXBFTDNXamNyOW1ONV9aMG13NnBhbXZhXzRNVEo5WWtoa3ZPeXdJUDREWUpuQ2ZqWlNsSzloaUUtX0dkX2w2YzJZYmdrMnUyeDV0Rk5ienk5TWlIeTB5UXhJbERobmR0TUxSZ292VU1Xb1R3NE1xMjQ2cmxCd3JMVDhlNks4aGVCZW9xSHdnTUNpNllJUHZMeGpxWQ?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Tue, 30 Jun 2026 07:13:29 GMT",Key facts: SPCX Joins Nasdaq-100 July 7; Shares Down 32%; Charter Talks - TradingView,https://news.google.com/rss/articles/CBMiyAFBVV95cUxOUjBLenNJVFlDY1labFRLTmNCRzZONFVIZW5fR09aR25MUklKb3BiSy1jakNJNklFbG9SNXd4dFlnUXRBLUhLNlNvY0V5bmw1YWZsazJTOHBRS3NqazA4NFlSSGZ6UVFTVEVrbUxHenRKREJHNU9TNUdUV1ctejU5cjBMS05WRW15SDY2bmdJMFNUUG1ZUkxvUWRMdUtGR21lSnFPNjhHdDFNenE5UGdvSHoyak9Ia3c2M3gtZzFIZGlFdVYzWkJpdA?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Sat, 27 Jun 2026 12:40:24 GMT",SpaceX Joins Nasdaq-100 on July 7. Its Stock is Still Not a Buy - Yahoo Finance,https://news.google.com/rss/articles/CBMimAFBVV95cUxOSVRLeEJOd1JWWnVMZy04ejhNLWpmTG5rZURteWFYQUJmOTZSdkZ2elEzNHVQV1lobjFnZDRCVHBpQTR3STVpZlF3T0tmb01VYVh1U3dmZ3hRLS1jcENPQzgtYjctTWx4bkNfNUNuS3Z1d0Nscm9vTEVYcWVsZWpoQkhZY2IxMUd0Y0M3dFptby1TMTU3OWVIYQ?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 11:25:00 GMT",It's Official: SpaceX To Join Nasdaq 100. Here's When It'll Join. - Investor's Business Daily,https://news.google.com/rss/articles/CBMihAFBVV95cUxOYmowMXUxWlp0QzZHSmowSGhmVDdvcjh4YkR4QVd3VXJPekJvZVhoQlRLdWpwOW5UM3VUMENZQ0NmLXVVVnU1ODBadXBrVHhnV080aUNFRXNhNlgyQnNDc2prUVJ2RWxZcGZjMzRURjVOUFllV3JNVE1VUjBvWUJDREpfc04?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 09:54:16 GMT",SpaceX Is Joining Another Big Index: It's Headed to the Nasdaq 100 - Investopedia,https://news.google.com/rss/articles/CBMikwFBVV95cUxNU3pIWjUwNmdnLUZiTkpOcU5ZcUhpZHRjbmNvUEZPMUZlSUxrcjlpUnNDSkxCRVIxSGJINlJnM3dWMW1oY2ttSDJlZmxMaFVoWTY2UDlqRVp4dlJuQVNOUU92OHRleVBxU2lWcjFJeDhCSXhKVDlKRTA1M0dHVW1uWUduYnBDQ2lLeEZmdFo5VUZnQjg?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 13:42:00 GMT",Nasdaq-100 ETFs Keep Sizzling: Can the Rally Last? - TradingView,https://news.google.com/rss/articles/CBMipwFBVV95cUxNNUN3T19XUTA0a3dnM0pjTVVVaHR4ODRnTUxiQ3haUUpoYS1NbGoxOWJSYlBTLVpwZV9QMVZMYVN3b3NXWFE3cmFseGlVWlZVTGZBT0RHaVYtQ2ZRbzVvem1oM2JNSEVFYVFYeWVLNklxNmsydWJ4eGItVmNhdENxbzZkSExEa0J2LWhVVXNFRVZIQk5kck5NSFY5TnNvekxMNUlpVjlSOA?oc=5,2,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 19:13:01 GMT",SpaceX Cracked the Nasdaq-100 in Just 15 Days 鈥?the Fastest Ever. Is It Time to Buy? - Yahoo Finance,https://news.google.com/rss/articles/CBMimwFBVV95cUxQMk9VbmpNUXdQeTIweENkSnhUSFJjUVM2MlJxUXVpV3lnVG9tQVRtTWJqdmhjQnJ5a2VwQVhwNXJhZmZXWEJ3Rm1Wa050bjMySm9ORi1sRmJCc09TWVlqcUx5eXFRMzB3WlB2eldGRE51TUR6QVBMR2xfSGowQkNvMVNRRU9SRkt1amNnS2x6QVJFN2wtNkxXX0Qtbw?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 11:02:41 GMT",SpaceX Shares Rise Ahead of Nasdaq 100 Inclusion on July 7 (SPCX) - Yahoo Finance,https://news.google.com/rss/articles/CBMinAFBVV95cUxQUWFRUDBSNHlrYW9Hc3l6Vjd5aXNBZm9TdWlVSS1GRWx5eEc2RVlPZWtNeDN2ZDNFSnJtU0Z5N1RRcTN3S1FTd1UtUWZYQ0dPSWtSS045WGFLT080Y1pPYktxeGtMaWVaeU40VWl1UkpFVEItdkpRaEZybGdaM296VDgxUng0cTV6bm9oNU9tX0dmWS1IZVdDTW85M08?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Mon, 29 Jun 2026 20:13:00 GMT","SpaceX Will Join the Nasdaq-100 on July 7. Here's What a $10,000 Investment Could Be Worth in December, According to History. - The Motley Fool",https://news.google.com/rss/articles/CBMi-wFBVV95cUxOTDdhTVczc2RQeUVPVkNZNU1lSzB5Qkw3bmlzMEpsUnRIWkhCclQ5Y2VhR3k3eTZwcTVHN0JlTDVrTVZsaXBaVkJjdGJuUWF2Z1hzaHFLV1l3cXVSOG5pcElZakdxdXFpNTBjZk84V3R6V3VYVm5EdUZ4VktZWnBJTzRVNUtfc3lpUjA2YWNXTVJaWXcwNFBRdXdvYm1scWtfV1RyNE9yYVc2TldoY2ZaVTk2VW9FeVUxT3JRdjhhRzh6RHkzNUVDSzhhdmcycUJkVVdiX0F2N19fdlk1ZklxMl9sWFM0YkZIanA5Qlc5TWFlWjQ2OTFHUEdQWQ?oc=5,0,0,0
+
+Google News,QQQ OR Nasdaq 100 stocks,"Sun, 21 Jun 2026 07:00:00 GMT",Nasdaq-100 Onboards 5 New Stocks in AI-Fueled Rebalancing - Yahoo Finance,https://news.google.com/rss/articles/CBMimAFBVV95cUxNcjFUeHRDaXlzc2pxS1JYTnRmVWRmWEN3SWhjUWtKN2tSOVNwdUREMjVBXzB6UjN3RjJGXzF0a0JfSjdkamNoY0pUQXkzcFZSdnhPQzFQZFJteEZBSFVNWU1wNF9LTGhyaVAzZFdfMV9IdUpNRmdFenpPZnI2emwwYjgwY1VJSklidUhaVW1ETjFobmxPSHl5Wg?oc=5,0,0,0
+
+Google News,Nasdaq AI stocks market,"Fri, 26 Jun 2026 12:15:15 GMT",AI stocks melt down again. What鈥檚 going on? - CNN,https://news.google.com/rss/articles/CBMic0FVX3lxTE1SR1FsMWdNSnB1eGo2bDFBMUlIS2ZGTmVvNXZNVWNjMEFmdjd1REJDMGxZWjJBdl9wODhHVzlUNkU0UWprd2hqRUZvYloxYVI0ZURubTlnTW16emMxbFVUakRfcXBiaHdvV3FfWnd6NldWZ0U?oc=5,0,0,0
+
+Google News,Nasdaq AI stocks market,"Mon, 29 Jun 2026 21:11:37 GMT","Stock market today: Dow closes above 52,000 for first time, S&P 500 and Nasdaq rally as tech gains - Yahoo Finance",https://news.google.com/rss/articles/CBMimgFBVV95cUxQS0FSelVOV005QXlFX093NXJvalhjUTdZNG1neXdRYWt5SlJuRjRuOWh6clJUMDdfWWVocmhpQk5yMXZyMnE4akVWeEtKTDZGTTJhbGVhWEFNeEt3aWl1dWVDVHJub254MkphQ3haZDRPRXkyQXVRdGZZS3JibUhaZVlKeDlVaWdaUlY3YklTU1pwTVJkbGNsZmdR?oc=5,2,0,0
+
+Google News,Nasdaq AI stocks market,"Tue, 30 Jun 2026 02:52:00 GMT","Nasdaq Recovers This Key Price Level As AI, Tech Stocks Show Bullish Rebound - Investor's Business Daily",https://news.google.com/rss/articles/CBMiywFBVV95cUxOTDFjNjBaUGFWRFdOVGVyd2ROekxCVHAxU2lWOGx5emhoZDg4UEcycUlvaUZiTEtOdmQtV2NRaFRkOU1zdDVBR29HUUo4aHpJMXREQjNDTEFhZXFPVmxmb0lFUjFvVDBoS1R0X2Q3bVhxdl9WTktIcENfOEVTaTRfb2N3UTZ3WmhWUjYzc3FkM0lKRTFQbFBZYUMzTERUR0JKLURORnhTVWdrWW5hQUdLQWF5R2xKQnUzRWRuS2tzaVdNVm5tUlRMQ19NRQ?oc=5,4,0,0
+
+Google News,Nasdaq AI stocks market,"Fri, 26 Jun 2026 19:52:01 GMT",GQG: Why We Are Still In An AI Stock Market Bubble - Morningstar,https://news.google.com/rss/articles/CBMikgFBVV95cUxPVWluQV9SVnhKY2pyWnpuZ1BwdWhrZE1aZkRJLW42Z3RqT25vWFdwUDVUcDFRR2Q0d1cwbEZ3aGwtOTdhNk5SNFpxU2FfWFZxX2FDNE1XU0t2MTFZeUl5cmNjdXhlX0FTRTlTcUIxZWtiZlNLMERwMkFlSVQzSU9IZU9KVDV5WEx1UnNwLXF0UTNodw?oc=5,0,2,2
+
+Google News,Nasdaq AI stocks market,"Mon, 29 Jun 2026 23:10:00 GMT",Cathie Wood Goes Bargain Hunting as AI Stocks Decline: 3 Stocks She Just Bought - The Motley Fool,https://news.google.com/rss/articles/CBMimAFBVV95cUxQYjlScVBfZzdEMUtaS1pUNThKX0FXa0lqdjZJMjNpR2RrN3dnN2xzbTBISjVkWHYwYkdlX3o4X3N3cklvWWl5czltTlhZeTluanl6UWo5SjZILUtVM3F3X1VnNTNsaEJCQUhSZlo2SjRoWGw4dnF4bUx1YzVubHBzZFM4MUN1cE50RHBselZWU3N1NWFkNnl4SQ?oc=5,0,0,0
+
+Google News,Nasdaq AI stocks market,"Sun, 28 Jun 2026 22:15:36 GMT",Tech Giants Power Stock Gains After AI-Fueled Rout: Markets Wrap - Bloomberg.com,https://news.google.com/rss/articles/CBMiswFBVV95cUxQUzVfczV6S0ZFcXdKcVpWR09wcHR1bnZ3b1BvN2l3dnFnMVM1c0JneHBzQ1F3ejVCWUFrLWNnaTFvOUt3NVhaNmZoaTBNN1M0V3MwQUUzRWgtSTdVOHVHQWdlYkJaanU1Y2oxVUlRc2UzYURFdnlQZmRUNWJuWjllSXc4YjF4cnBGakM4aHRyQTJnNUtiNWVGbXZIc3puVGxkcExkbkVnUUF1aTZ5bVZJOXp4cw?oc=5,0,0,0
+
+Google News,Nasdaq AI stocks market,"Tue, 30 Jun 2026 01:22:18 GMT",Cathie Wood Snaps Up Three AI Stocks Amid Nasdaq鈥檚 Five-Day Selloff - NAI500,https://news.google.com/rss/articles/CBMioAFBVV95cUxNR1p1S19HUmNSYlVkc29LTjN1bEQ5YTU3RVdaNFpncjhTV3diVDRXMFdxUkk4M3F6ekZpNzZGU2ZpTmhrQjNlRG9RcHlZc09OaTQyTkMxMlhrR0JnYjBxMW00Tm84ZnBVa0VQQUJIdV9oeUFiM0hRUTBVblpRU3E2bzAtcEtES1Q4TF93ZWZIQTBnLWlWUE80bDBfU0FGQ3Bf?oc=5,0,2,2
+
+Google News,Nasdaq AI stocks market,"Wed, 24 Jun 2026 05:48:57 GMT",Nasdaq closes down more than 2% as global tech sell-off deepens - The Washington Post,https://news.google.com/rss/articles/CBMiowFBVV95cUxOeGhNSHlYdWNSMFd6WFJuNVNCZjc0clRJOUhHVDlZZWhYQXBsdHhGU2tuMXR2cndsWkh3TXA5V1RnOTR5bzdoZWExTkNvbzR3VHcwN1BFY29HZlBqT0Y2a1VITnNnMkprVklFUWkyNHdBbi0ySkNSdnowM29jOU5NRDVRYXBCbnVFOXBfU1ZhNEZSNlVfamhUVkRjTzd0Y0JoSk8w?oc=5,0,0,0
+
+Google News,Nasdaq AI stocks market,"Mon, 29 Jun 2026 06:35:00 GMT",Korea鈥檚 Chips Rally Is Driving Its Stock Market Into a Danger Zone - WSJ,https://news.google.com/rss/articles/CBMirgFBVV95cUxOUHpaaGtlZW83WnBlRGNmaDVvRWxvRXBHQ3VFTnN1b2JnN3JFNDNQNGhBTTJyVUVOS3VpeDNXbmhzMnJRaGtHSjBYM2RlVDhyMGIybTdoNGx1SDlueE1LYUtqVVRkaU1vUXRlbi1jZkNNQU41cC1JdGZWNHRmTVlvT21SVDRhZ0hpdzAySzhNclBrMG5SMjNYS0VTRGxCU1ZJcXUtZ29CR3czRm9HZUE?oc=5,2,0,0
+
+Google News,Nasdaq AI stocks market,"Mon, 08 Jun 2026 07:00:00 GMT",Wall Street holds steadier as AI stocks recover some of last week's sell-off - PBS,https://news.google.com/rss/articles/CBMisAFBVV95cUxQVUU3Mk9XLTdiNVVna1E4V0VaODlCeGxXM1BFb2pwYnlEQjNMeFFMLWhJUHl3eEN1VWpPQTFzcDlRWnh1eG5KQTRTenI5cGh5Tm1IZDZiMnFLMW9yYnp0QUFoR3U0NVJheGQ0cUllaldZcHZsZFJWblN4ZS0tQXNXTi0zTFg5SXI0WE1qcldHNkE0UEFVWUgxYi1pRnZESDVlRnM3TlowNTI4cmVseDlWWQ?oc=5,0,0,0
+
+Google News,Nasdaq AI stocks market,"Fri, 26 Jun 2026 20:43:32 GMT","3 AI Stocks Added to the Nasdaq 100: Are CoreWeave, Nebius, and Astera Labs a Buy? - MarketWise",https://news.google.com/rss/articles/CBMif0FVX3lxTFBDVXdFLXZsQ3dieXl0WklZMHU1LXdWcndQRno0MzRQeER4MWNvam52NEVMZkpxQ0lDTG5RTFV6MkdORFlSVkRvTzdYalBhS056bkI5czJIcDhvNS1PNzVmVFNHQkRxZ2VXMVJFRE9LX3g3dUxjcnNubTNFalRVWVU?oc=5,0,0,0
+
+Google News,Nasdaq AI stocks market,"Tue, 23 Jun 2026 12:10:31 GMT",Wall Street is getting trampled by an AI sell-off. South Korean market plunges 10% - CNN,https://news.google.com/rss/articles/CBMifEFVX3lxTE8xWi1vbVJfRVl3SlVIX0xzRGpoS3pzMFBNYUJreWZsTVpRaUhwY0NFQlVvbGFzRWJRRnlNTWNYaHlTeFF4TUVBaTlkVmxSZ1h3T2tzTk5iRmpnNVZLZURiSkpoaGN0blFvVzMteEJxWFZTT0tOUXRrZlh3VWY?oc=5,0,0,0
+
+Google News,Nasdaq AI stocks market,"Fri, 26 Jun 2026 13:08:00 GMT",Stock Market Forecast For Next Six Months: Why More Gains May Lie Ahead - Investor's Business Daily,https://news.google.com/rss/articles/CBMijAFBVV95cUxNeTFDTVlOLU9tckVpTGRXVDVPZV82elNENmpvN2pQSkpISk1iQmJoZXg0QzFCb0Zhb1ByNVR2eGhLSDZWU2thRVcydG9GTTZyY2tOOXZTdENHTW5ac3N0VERtVkZUdG1HbVV1aFVHcS1kdWtuLUN4S1MtSmlSQ0w3Mk5rbHl0bjJ2ZE5VeA?oc=5,0,0,0
+
+Google News,Nasdaq AI stocks market,"Fri, 26 Jun 2026 20:17:17 GMT","Stock market today: S&P 500, Nasdaq snap 2-week win streak as AI jitters pressure tech - Yahoo Finance",https://news.google.com/rss/articles/CBMi0wFBVV95cUxOTl9mNUdBaC1Nd2hlTHYzNGtONnY5UE1WUUhfVlFyNEJFNFQwZ3hQV2pNVjZUdmozY0JKRS1wQWVlQk9iZlNpNVM0Y2I2ZFBSN0JKaU0xejFNU1RvSjRiNXhaX0NfaGF4cDZlRVZjT2lwZndpNkpDZDZzemYyR2ljeGtpTDBhSjNuSzNSRW55MXRSYmJhVGFWbFdtZUNudndocW40SmdJSzI0TGZoNFRjcTJDek9IMzVkU2ZHZ3ZONTRUVHlQWUt6VUMxcjAxVFJxLWFr?oc=5,0,0,0
+
+Google News,Nasdaq AI stocks market,"Fri, 26 Jun 2026 03:22:19 GMT",How major US stock indexes fared Thursday 6/25/2026 - The Washington Post,https://news.google.com/rss/articles/CBMixwFBVV95cUxPUXYzbFMtR1llUC1YZHVGYm00S3Y2NUhMakVXeENrcXQ3ZjdwUVl5MTZuaUVCaThzQ3hrVlp0WmxxcUV6dS1iXzhuM2pkZUVCSmNjWjZzUnFQVjE1R29iVXl3YjVQYlFxSHlObWM4MWxTWW00a3pjWWFoQ0tJWjU3dXQ0VjBfaGNvUWc1X01TaDlOU21sSG5lZjFHb29wSnNkekJzRmk3ek84T2tmZUVRVk5JeDYxZzBPR2tfQ2lHeUE0NHZETXBj?oc=5,0,0,0
+
+Google News,Nasdaq AI stocks market,"Mon, 29 Jun 2026 09:00:26 GMT",The stock market rally that鈥檚 making some people rich and everyone else miserable - CNN,https://news.google.com/rss/articles/CBMibEFVX3lxTE4wTnVnQTZObVBiRWNaVmMwNHFDandIeHBjbDRnc182d2VPcnVOeHp5alN2LVBGSjFZTkE5RmpLXzRMcDVlU0MwbGRBYnd6SWptRGtZYkNPYjNjWnlab1ZwUUFLT0c2dE1UUVBIaA?oc=5,2,0,0
+
+Google News,Nasdaq AI stocks market,"Tue, 02 Jun 2026 07:00:00 GMT","America鈥檚 stock market is surging, but it鈥檚 still all about AI - CNN",https://news.google.com/rss/articles/CBMib0FVX3lxTE02ZmVLRTNRaGtjWDU0ODNmcG5mTnhzelZPb3MtWWd2eU0wbWVBVDRvcnk1eFVOTjBDVkNhWUdBdG1tVkdoWEpCcVBCQlVwVmdHNkhGN0RDMWlDbHFPYmFEQkRwODUwQW5halRPY0JRUQ?oc=5,0,0,0
+
+Google News,Nasdaq AI stocks market,"Tue, 09 Jun 2026 07:00:00 GMT",A Market Bubble Led by AI - The American Prospect,https://news.google.com/rss/articles/CBMiZ0FVX3lxTE8yUGlvUFo1NWRFVjBYOWMzTkE0M3BzcmZSRlQ1WWZlVmNXa0o3Rk9oNTFtQ0J3SGlWQjhLazdlU0s3aUF3QWxYc1ItNUg5TGdEbUd4aVNkX0hiOTVKWUFCQ2YyUWZtLW8?oc=5,0,2,2
+
+Google News,Nasdaq AI stocks market,"Tue, 23 Jun 2026 21:17:46 GMT",Is AI 'one big bubble'? Behind the tech sell-off - Georgia Public Broadcasting,https://news.google.com/rss/articles/CBMihAFBVV95cUxQREQtNzd6QUUybkFTYWtrNVllTEFLcV9ycFNUcWJtcmhmXzhqSjBMcjNCMThEOW5yU05aV3lPT0FfOG1RZGpneEQ1ODdKUkVsZzJoMVpkOEhhbV9XNlg2QzM4ZVpLcmxKMVZad3dleTVzeUJ3R2ZEM2Jaemw2REtDUF9YQmg?oc=5,0,2,2
+
+Google News,Nasdaq AI stocks market,"Thu, 25 Jun 2026 12:42:00 GMT","Stock Market Today: Dow Jones, S&P 500, Nasdaq Futures Gain As AI Stocks Rally On Micron鈥檚 Strong Outlook - Benzinga",https://news.google.com/rss/articles/CBMiggJBVV95cUxNRkFaMnhCa0JSblJ6ZVcxUHUyQ3l0blVqSlktd2x6bUloMzRCMU0wVkZaX0ZIV3p1WEQ0NFpqSnNMdVM4a2EzbW11ODg0cmlua01RVXo3UnlUdl9qNmd6UmUzRmkzUUh3UHhwOXJlSm1yUVpnUmZoWVhRY1VrMHBpODZpR2RmMGZjaE1vdkgxTzluTUF4ZExMTHk5ZXJZMXlRazFmamhYaHNpMUVZVXZJRE53M3l6c3B1Zzk0RzI1dXd5dnJhUWJtUWxVODJaSUFmN1FIM3Y0SWdkR0VEVkM4NW1DT3dSQ2JMWVBNWnBONnRjcVIwWnZpMks3QVdpa1E2b0E?oc=5,4,0,0
+
+
+</SENTIMENT_HEADLINES_SAMPLE>
+
+Return ONLY valid JSON. Do not use Markdown fences. Do not include prose outside JSON.
+
+The JSON schema should be:
+{
+  "hypotheses": [
+    {
+      "hypothesis_id": "H001",
+      "title": "...",
+      "plain_english_thesis": "...",
+      "economic_market_mechanism": "...",
+      "feature_families_used": ["..."],
+      "exact_feature_columns_used": ["..."],
+      "expected_direction": {"feature_name": "higher_is_worse_or_lower_is_worse_or_context_dependent"},
+      "target_horizon": "15BD/30BD/60BD/126BD",
+      "target_type": "path_risk | bearish_return | repair_failure | acute_shock | narrow_leadership_fragility | cross_asset_stress",
+      "target_definition": "...",
+      "trigger_logic_pseudocode": "...",
+      "why_this_should_work": "...",
+      "when_this_may_fail": "...",
+      "data_quality_or_leakage_risks": "...",
+      "minimum_data_coverage_requirement": "...",
+      "validation_plan": ["..."],
+      "dashboard_implication": "...",
+      "priority_score": 1
+    }
+  ]
+}
+
+Generate 3 hypotheses.

@@ -1,0 +1,36 @@
+version: 1
+candidate_id: YYYY-MM-DD_candidate_name
+status: template
+
+source_hypotheses: []
+
+rule_type: shadow_dashboard_candidate
+production_dashboard_change_requested: false
+human_approval_required_before_production: true
+
+exact_feature_columns_used: []
+future_data_requirement: []
+
+trigger_logic:
+  description: ""
+  pseudocode: ""
+  thresholds:
+    threshold_policy: deterministic_pre_declared
+    optimization_used: false
+
+evidence_requirements:
+  alert_days: null
+  alert_burden: null
+  base_rate_lift: null
+  event_coverage: null
+  positive_lift_folds: null
+  median_lead: null
+  false_calm_analysis_present: false
+  comparison_vs_current_dashboard_present: false
+
+approval:
+  status: proposed
+  human_reviewer: null
+  review_date: null
+  approved_production_files: []
+  notes: ""

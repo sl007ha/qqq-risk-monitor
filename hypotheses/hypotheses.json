@@ -1,0 +1,106 @@
+{
+  "hypotheses": [
+    {
+      "hypothesis_id": "H001",
+      "title": "SpaceX's Inclusion in Nasdaq-100 and Its Impact on Tech Sector Momentum",
+      "plain_english_thesis": "SpaceX's addition to the Nasdaq-100 may catalyze broader tech sector momentum, especially in AI and space-related stocks, as increased index inclusion could drive inflows into Nasdaq-100 ETFs and boost investor sentiment.",
+      "economic_market_mechanism": "Index inclusion typically attracts passive investment flows, which can amplify stock price movements. If SpaceX is perceived as a high-growth, AI-driven company, its inclusion may signal broader confidence in the tech sector, especially in AI and space innovation.",
+      "feature_families_used": [
+        "Index Inclusion Events",
+        "Tech Sector Momentum",
+        "AI Stock Performance"
+      ],
+      "exact_feature_columns_used": [
+        "SPCX Price Movement",
+        "Nasdaq-100 ETF Inflows",
+        "AI Sector P/E Ratios"
+      ],
+      "expected_direction": {
+        "feature_name": "higher_is_worse_or_lower_is_worse_or_context_dependent"
+      },
+      "target_horizon": "15BD",
+      "target_type": "narrow_leadership_fragility",
+      "target_definition": "The potential for Nasdaq-100 ETFs and AI sector stocks to outperform broader markets due to increased institutional and retail investor attention.",
+      "trigger_logic_pseudocode": "IF (SPCX Price Movement > 5%) AND (Nasdaq-100 ETF Inflows > 10B) THEN (AI Sector P/E Ratios > 30) THEN Hypothesis Triggered",
+      "why_this_should_work": "Index inclusion often leads to increased trading volume and inflows into ETFs, which can drive short-term momentum. If SpaceX is viewed as a leader in AI and space tech, it may attract investors looking for exposure to high-growth sectors.",
+      "when_this_may_fail": "If the broader market is in a downturn or if AI stocks are broadly overvalued, the positive impact of SpaceX's inclusion may be muted.",
+      "data_quality_or_leakage_risks": "SPCX price data may be volatile and subject to market sentiment shifts unrelated to index inclusion. ETF inflow data may lag or be delayed.",
+      "minimum_data_coverage_requirement": "At least 75% coverage of Nasdaq-100 ETF inflows and AI sector P/E ratios for the past 30 days.",
+      "validation_plan": [
+        "Compare SPCX price movement against Nasdaq-100 ETF inflows post-inclusion",
+        "Analyze AI sector P/E ratios before and after inclusion",
+        "Monitor ETF inflows for 15 business days post-inclusion"
+      ],
+      "dashboard_implication": "Monitor Nasdaq-100 ETF inflows and AI sector P/E ratios for signs of increased momentum post-SpaceX inclusion.",
+      "priority_score": 1
+    },
+    {
+      "hypothesis_id": "H002",
+      "title": "AI Stock Volatility and Nasdaq-100 ETF Performance Correlation",
+      "plain_english_thesis": "Increased volatility in AI stocks may lead to a temporary selloff in Nasdaq-100 ETFs, as investors reassess the risk-reward profile of AI-driven companies within the index.",
+      "economic_market_mechanism": "AI stocks are a significant component of the Nasdaq-100. If AI stocks experience a sharp decline, it may lead to a broader selloff in Nasdaq-100 ETFs as investors rebalance their portfolios or reduce exposure to high-volatility sectors.",
+      "feature_families_used": [
+        "AI Stock Volatility",
+        "Nasdaq-100 ETF Performance",
+        "Market Sentiment Indicators"
+      ],
+      "exact_feature_columns_used": [
+        "AI Sector Volatility Index",
+        "Nasdaq-100 ETF Price Change",
+        "Market Fear Index (VIX)"
+      ],
+      "expected_direction": {
+        "feature_name": "higher_is_worse"
+      },
+      "target_horizon": "30BD",
+      "target_type": "cross_asset_stress",
+      "target_definition": "The potential for AI stock volatility to spill over into Nasdaq-100 ETFs and broader market indices, increasing overall portfolio risk.",
+      "trigger_logic_pseudocode": "IF (AI Sector Volatility Index > 25) AND (Nasdaq-100 ETF Price Change < -3%) THEN (Market Fear Index > 20) THEN Hypothesis Triggered",
+      "why_this_should_work": "AI stocks are a major driver of Nasdaq-100 performance. High volatility in AI stocks may lead to increased uncertainty, prompting investors to sell Nasdaq-100 ETFs and move to safer assets.",
+      "when_this_may_fail": "If the broader market is in a bull phase or if AI stocks are broadly undervalued, the impact of volatility may be less pronounced.",
+      "data_quality_or_leakage_risks": "AI sector volatility data may be noisy or subject to short-term spikes. ETF price change data may be delayed or incomplete.",
+      "minimum_data_coverage_requirement": "At least 80% coverage of AI sector volatility and Nasdaq-100 ETF price changes for the past 60 days.",
+      "validation_plan": [
+        "Analyze AI sector volatility before and after major news events",
+        "Compare Nasdaq-100 ETF price changes with AI sector volatility",
+        "Monitor VIX and other fear indices for signs of increased market stress"
+      ],
+      "dashboard_implication": "Monitor AI sector volatility and Nasdaq-100 ETF performance for signs of cross-asset stress.",
+      "priority_score": 2
+    },
+    {
+      "hypothesis_id": "H003",
+      "title": "Nasdaq-100 ETF Inflows and AI Stock Performance as Leading Indicators",
+      "plain_english_thesis": "Nasdaq-100 ETF inflows and AI stock performance may serve as leading indicators of broader market sentiment and risk appetite, particularly in the tech sector.",
+      "economic_market_mechanism": "Nasdaq-100 ETFs are heavily weighted toward tech stocks, including AI-driven companies. Inflows into these ETFs may indicate increased investor confidence in the tech sector, while declines may signal risk aversion.",
+      "feature_families_used": [
+        "Nasdaq-100 ETF Inflows",
+        "AI Stock Performance",
+        "Market Risk Appetite Indicators"
+      ],
+      "exact_feature_columns_used": [
+        "Nasdaq-100 ETF Inflows",
+        "AI Sector Return",
+        "Risk Appetite Index (RAI)"
+      ],
+      "expected_direction": {
+        "feature_name": "higher_is_better"
+      },
+      "target_horizon": "60BD",
+      "target_type": "path_risk",
+      "target_definition": "The potential for Nasdaq-100 ETF inflows and AI stock performance to signal long-term market trends and risk appetite, influencing broader portfolio allocations.",
+      "trigger_logic_pseudocode": "IF (Nasdaq-100 ETF Inflows > 50B) AND (AI Sector Return > 10%) THEN (Risk Appetite Index > 50) THEN Hypothesis Triggered",
+      "why_this_should_work": "Nasdaq-100 ETF inflows and AI stock performance are closely tied to investor sentiment and risk appetite. Strong inflows and positive returns may indicate a bullish trend in the tech sector.",
+      "when_this_may_fail": "If the broader market is in a bear phase or if AI stocks are overvalued, the positive signals from ETF inflows and AI stock performance may be misleading.",
+      "data_quality_or_leakage_risks": "ETF inflow data may be delayed or subject to reporting errors. AI sector return data may be influenced by short-term events unrelated to long-term trends.",
+      "minimum_data_coverage_requirement": "At least 90% coverage of Nasdaq-100 ETF inflows and AI sector returns for the past 126 days.",
+      "validation_plan": [
+        "Compare Nasdaq-100 ETF inflows with AI sector returns over time",
+        "Analyze Risk Appetite Index in relation to ETF inflows and AI stock performance",
+        "Monitor for consistency in signals over multiple market cycles"
+      ],
+      "dashboard_implication": "Track Nasdaq-100 ETF inflows and AI sector returns to gauge long-term market sentiment and risk appetite.",
+      "priority_score": 3
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+version: 1
+as_of: 2026-07-01
+source:
+  iteration: iteration_003
+  files:
+    - research_iterations/iteration_003/decision_log.md
+    - research_iterations/iteration_003/next_iteration_plan.md
+
+active_hypotheses:
+  - hypothesis_id: I002_H001
+    label: downside_volatility_baseline
+    status: active_baseline
+    source_iteration: iteration_002
+    evidence:
+      base_rate_lift: 2.59
+      alert_burden: 0.0750
+      event_coverage: 0.4000
+      positive_lift_folds: "5/19"
+      median_lead_bd: 3.0
+    role_next_iteration: Compare against I003_H001 at event level.
+
+  - hypothesis_id: I002_H002
+    label: cross_asset_acute_shock_baseline
+    status: active_baseline
+    source_iteration: iteration_002
+    evidence:
+      base_rate_lift: 1.97
+      alert_burden: 0.1604
+      event_coverage: 0.5224
+      positive_lift_folds: "11/19"
+      median_lead_bd: 0.0
+    role_next_iteration: Preserve as cross-asset baseline after I003_H002 failed to improve lead time.
+
+  - hypothesis_id: I002_H003
+    label: low_burden_leadership_baseline
+    status: active_baseline
+    source_iteration: iteration_002
+    evidence:
+      base_rate_lift: 2.24
+      alert_burden: 0.0516
+      event_coverage: 0.3103
+      positive_lift_folds: "6/19"
+      median_lead_bd: 13.5
+    role_next_iteration: Use as leadership context baseline, not high-burden standalone replacement.
+
+  - hypothesis_id: I003_H005
+    label: false_calm_rewrite_candidate
+    status: active_rewrite_candidate
+    source_iteration: iteration_003
+    evidence:
+      base_rate_lift: 1.45
+      alert_burden: 0.1608
+      event_coverage: 0.6706
+      positive_lift_folds: "10/19"
+      median_lead_bd: 5.0
+    role_next_iteration: Reduce burden with pre-declared second-stage confirmation.

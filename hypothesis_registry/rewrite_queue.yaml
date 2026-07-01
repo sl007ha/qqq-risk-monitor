@@ -1,0 +1,59 @@
+version: 1
+as_of: 2026-07-01
+source:
+  iteration: iteration_003
+  files:
+    - research_iterations/iteration_003/decision_log.md
+    - research_iterations/iteration_003/next_iteration_plan.md
+
+rewrite_queue:
+  - queue_id: RQ004_FALSE_CALM_BURDEN_REDUCTION
+    title: I003_H005 false-calm burden reduction
+    priority: high
+    source_hypotheses:
+      - I003_H005
+      - I002_H005
+    evidence_summary: I003_H005 improved lift to 1.45x, coverage to 67.06%, and median lead to 5.0BD, but alert burden remained 16.08%.
+    research_task: Pre-declare a stricter confirmation structure that attempts to reduce burden without optimizing thresholds.
+    success_focus:
+      - lower alert_burden
+      - preserve event_coverage
+      - preserve or improve positive_lift_folds
+      - preserve median_lead
+    hard_rules:
+      - no threshold optimization
+      - no live sentiment backtests
+      - no production dashboard changes
+
+  - queue_id: RQ004_DOWNSIDE_VOL_COMPARISON
+    title: I002_H001 versus I003_H001 downside-volatility comparison
+    priority: medium
+    source_hypotheses:
+      - I002_H001
+      - I003_H001
+    evidence_summary: I003_H001 improved positive-lift folds from 5/19 to 6/19 but worsened lift, burden, and lead time versus I002_H001.
+    research_task: Compare event-level coverage, false calm, and lead time rather than selecting by aggregate lift alone.
+    success_focus:
+      - event_coverage
+      - false_calm_events
+      - median_lead
+      - fold stability
+    hard_rules:
+      - preserve I002_H001 as baseline
+      - do not optimize thresholds
+
+  - queue_id: RQ004_LEADERSHIP_CONTEXT_OVERLAY
+    title: Leadership-as-context overlay from I002_H003 and I003_H003 evidence
+    priority: medium
+    source_hypotheses:
+      - I002_H003
+      - I003_H003
+    evidence_summary: I002_H003 was low burden with 13.5BD median lead, while I003_H003 achieved 77.59% coverage but 23.67% burden.
+    research_task: Test leadership only as context for false-calm or downside-volatility signals, not as a standalone broad alert.
+    success_focus:
+      - reduce false_calm_events
+      - avoid high alert_burden
+      - preserve lead_time evidence
+    hard_rules:
+      - do not promote I003_H003 standalone
+      - no production dashboard changes

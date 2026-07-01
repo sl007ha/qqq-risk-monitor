@@ -1,0 +1,56 @@
+version: 1
+as_of: 2026-07-01
+source:
+  iteration: iteration_003
+  files:
+    - research_iterations/iteration_003/decision_log.md
+    - research_iterations/iteration_003/analysis.md
+
+rejected_hypotheses:
+  - hypothesis_id: I003_H002
+    status: dropped_exact_variant
+    source_iteration: iteration_003
+    evidence:
+      base_rate_lift: 1.85
+      alert_burden: 0.1170
+      event_coverage: 0.4254
+      positive_lift_folds: "8/19"
+      median_lead_bd: 0.0
+    reason: Lower burden did not compensate for worse lift, event coverage, fold stability, and unchanged 0BD lead time versus I002_H002.
+    lesson: Do not reduce cross-asset burden by removing the stable coverage that made I002_H002 useful.
+
+  - hypothesis_id: I003_H004
+    status: rejected_false_repair_variant
+    source_iteration: iteration_003
+    evidence:
+      base_rate_lift: 0.19
+      alert_burden: 0.0221
+      event_coverage: 0.0
+      positive_lift_folds: "0/19"
+      median_lead_bd: null
+    reason: Simplified false-repair trigger produced no event coverage and no positive-lift folds.
+    lesson: Do not retest the same MMDI-repair plus unresolved-price-damage structure against the same target without new data or a new target definition.
+
+  - hypothesis_id: I003_H003
+    status: rejected_as_standalone_alert
+    source_iteration: iteration_003
+    evidence:
+      base_rate_lift: 1.55
+      alert_burden: 0.2367
+      event_coverage: 0.7759
+      positive_lift_folds: "8/19"
+      median_lead_bd: 3.0
+    reason: Leadership coverage companion covered many events, but alert burden was too high and selectivity too weak for a standalone alert.
+    lesson: Leadership evidence should be used as context or a second-stage overlay, not as the broad standalone I003_H003 trigger.
+
+failed_lessons:
+  false_repair:
+    related_hypotheses:
+      - I002_H004
+      - I003_H004
+    lesson: Both over-constrained and simplified false-repair variants failed on 30BD MDD; revisit only with event-based repair features, a different target, or explicit human-approved data additions.
+  leadership_context:
+    related_hypotheses:
+      - I002_H003
+      - I003_H003
+    lesson: Tight leadership logic has useful low-burden lead time, while relaxed leadership logic is high coverage but too broad.

@@ -1,0 +1,353 @@
+hypotheses:
+  - hypothesis_id: I003_H001
+    title: Downside volatility with flexible trend pressure predicts 30BD path risk
+    plain_english_thesis: >
+      When QQQ range and realized volatility expand while downside tape pressure is visible,
+      future 30-business-day drawdown risk should rise even if QQQ has not fully broken
+      below its short trend.
+    economic_market_mechanism: >
+      Range expansion and realized-volatility expansion indicate unstable price discovery.
+      Negative skew, gap-down frequency, or large red days show that volatility is being
+      expressed asymmetrically. Requiring either MA20 or MA50 pressure makes the test less
+      brittle than the prior version that required price to be below MA20 on the alert day.
+    feature_families_used:
+      - Volatility / Range / Path Risk
+      - Price / Trend Structure
+    exact_feature_columns_used:
+      - range_20d_vs_252d
+      - vol_20d_vs_252d
+      - realized_skew_20d
+      - gap_down_count_20d
+      - large_red_day_count_20d
+      - price_vs_ma20
+      - price_vs_ma50
+    expected_direction:
+      range_20d_vs_252d: higher_is_worse
+      vol_20d_vs_252d: higher_is_worse
+      realized_skew_20d: lower_is_worse
+      gap_down_count_20d: higher_is_worse
+      large_red_day_count_20d: higher_is_worse
+      price_vs_ma20: lower_is_worse
+      price_vs_ma50: lower_is_worse
+    target_horizon: 30BD
+    target_type: path_risk
+    target_definition: future 30BD maximum drawdown <= -8%
+    trigger_logic_pseudocode: >
+      range_20d_vs_252d >= training 80th percentile AND
+      vol_20d_vs_252d >= training 75th percentile AND
+      (realized_skew_20d <= training 25th percentile OR
+       gap_down_count_20d >= training 75th percentile OR
+       large_red_day_count_20d >= training 75th percentile) AND
+      (price_vs_ma20 <= training 40th percentile OR price_vs_ma50 <= training 45th percentile)
+    why_this_should_work: >
+      The strongest prior signal was a downside volatility interaction. This version asks
+      whether the same mechanism remains useful when trend damage is measured as relative
+      pressure rather than a single below-MA20 binary gate.
+    when_this_may_fail: >
+      It may fire during volatility-normalization phases after an initial selloff, or miss
+      sudden shocks that occur before range and realized volatility have expanded.
+    data_quality_or_leakage_risks: >
+      Price-derived features should be point-in-time at daily close. The forward MDD label
+      is used only for validation, not trigger construction.
+    minimum_data_coverage_requirement: >
+      At least 8 years of expanding-window history, with non-null range, volatility, skew,
+      downside tape, and trend features in each test fold.
+    validation_plan:
+      - future MDD hit rate versus base rate
+      - alert burden by year and full sample
+      - base-rate lift versus I002_H001
+      - event coverage and false calm events
+      - false repair and false calm inspection through event rows
+      - purged walk-forward validation with training-window quantiles only
+      - yearly fold stability and median lead time
+    dashboard_implication: >
+      If lift remains high and fold stability improves, this could remain a shadow
+      path-risk candidate, not a production dashboard change.
+    priority_score: 9
+    future_data_requirement: []
+
+  - hypothesis_id: I003_H002
+    title: Early cross-asset deterioration plus restrained vol confirmation predicts acute shock
+    plain_english_thesis: >
+      When credit or funding stress deteriorates while rates, dollar, or volatility pressure
+      confirms the stress, QQQ should face elevated 15-business-day acute drawdown risk.
+    economic_market_mechanism: >
+      Credit and funding stress can lead equity drawdowns, while front-vol, rate-vol, and
+      dollar pressure often confirm that stress is becoming urgent. This iteration lowers
+      dependence on same-day option shock by using a broader but still deterministic
+      confirmation set.
+    feature_families_used:
+      - Credit / Funding Stress
+      - Rates / Yield Curve
+      - Vol / Options / Tail Stress
+    exact_feature_columns_used:
+      - credit_worsening_equity_up
+      - credit_not_confirming_equity
+      - hy_oas_change_20d
+      - hyg_vs_lqd_20d
+      - rate_vol_proxy
+      - dxy_change_20d
+      - usd_yield_shock
+      - vix_percentile_252d
+      - vix9d_vs_vix
+    expected_direction:
+      credit_worsening_equity_up: true_is_worse
+      credit_not_confirming_equity: true_is_worse
+      hy_oas_change_20d: higher_is_worse
+      hyg_vs_lqd_20d: lower_is_worse
+      rate_vol_proxy: higher_is_worse
+      dxy_change_20d: higher_is_worse
+      usd_yield_shock: true_is_worse
+      vix_percentile_252d: higher_is_worse
+      vix9d_vs_vix: higher_is_worse
+    target_horizon: 15BD
+    target_type: acute_shock
+    target_definition: future 15BD maximum drawdown <= -5%
+    trigger_logic_pseudocode: >
+      (credit_worsening_equity_up OR credit_not_confirming_equity OR
+       hy_oas_change_20d >= training 75th percentile OR
+       hyg_vs_lqd_20d <= training 25th percentile) AND
+      (rate_vol_proxy >= training 75th percentile OR
+       dxy_change_20d >= training 70th percentile OR
+       usd_yield_shock) AND
+      (vix_percentile_252d >= training 70th percentile OR
+       vix9d_vs_vix >= training 75th percentile)
+    why_this_should_work: >
+      I002_H002 was the most stable fold-by-fold candidate but often fired at the event
+      start. This version asks whether requiring macro pressure before full front-vol
+      panic can retain coverage with better timing.
+    when_this_may_fail: >
+      It may miss equity-specific shocks not preceded by credit, rates, or dollar stress.
+      It may also over-alert in macro stress episodes where QQQ remains resilient.
+    data_quality_or_leakage_risks: >
+      Uses public market and FRED/Yahoo-derived series. HYG/LQD and VIX9D have partial
+      history, so fold eligibility must be interpreted with coverage in mind.
+    minimum_data_coverage_requirement: >
+      At least 8 years of expanding-window history and enough non-null credit, rates,
+      dollar, VIX percentile, and front-vol observations for each yearly fold.
+    validation_plan:
+      - future 15BD MDD hit rate versus base rate
+      - alert burden versus I002_H002
+      - base-rate lift by full sample and yearly folds
+      - event coverage and false calm events
+      - lead-time distribution versus I002_H002
+      - purged walk-forward validation with training-window quantiles only
+      - false calm review for missed shock episodes
+    dashboard_implication: >
+      If lead time improves without excessive burden, this could become a shadow
+      acute-shock monitor candidate.
+    priority_score: 8
+    future_data_requirement: []
+
+  - hypothesis_id: I003_H003
+    title: Narrow-leadership coverage companion predicts 60BD fragility
+    plain_english_thesis: >
+      When cap-weighted QQQ leadership stays ahead of equal-weight or broad-market proxies
+      while semiconductors or breadth fail to confirm, the index should face higher
+      60-business-day fragility risk.
+    economic_market_mechanism: >
+      Narrow leadership can hide weakening market participation. If QQQ outperforms equal
+      weight or the S&P equal-weight proxy while semiconductor confirmation or Mag7 breadth
+      weakens, the rally may become dependent on fewer names and more vulnerable to repair
+      failure or delayed drawdown.
+    feature_families_used:
+      - Breadth / Market Internals
+      - Leadership / Relative Strength
+      - Semiconductor / AI / Tech Confirmation
+      - MMDI signal layer
+    exact_feature_columns_used:
+      - qqq_vs_qqqe_3m
+      - qqq_vs_rsp_3m
+      - qqq_vs_soxx_3m
+      - smh_vs_qqq_3m
+      - semis_failure_flag
+      - qqq_up_soxx_down_20d
+      - mag7_breadth
+      - mmdi_leadership_narrowing_stress
+    expected_direction:
+      qqq_vs_qqqe_3m: higher_is_worse
+      qqq_vs_rsp_3m: higher_is_worse
+      qqq_vs_soxx_3m: higher_is_worse
+      smh_vs_qqq_3m: lower_is_worse
+      semis_failure_flag: true_is_worse
+      qqq_up_soxx_down_20d: true_is_worse
+      mag7_breadth: lower_is_worse
+      mmdi_leadership_narrowing_stress: higher_is_worse
+    target_horizon: 60BD
+    target_type: narrow_leadership_fragility
+    target_definition: future 60BD maximum drawdown <= -10%
+    trigger_logic_pseudocode: >
+      (qqq_vs_qqqe_3m >= training 70th percentile OR
+       qqq_vs_rsp_3m >= training 70th percentile) AND
+      ((qqq_vs_soxx_3m >= training 70th percentile OR
+        smh_vs_qqq_3m <= training 30th percentile OR
+        semis_failure_flag OR qqq_up_soxx_down_20d) OR
+       (mag7_breadth <= training 40th percentile OR
+        mmdi_leadership_narrowing_stress >= training 70th percentile))
+    why_this_should_work: >
+      I002_H003 had strong lift and useful lead time but low event coverage. This companion
+      relaxes the final confirmation gate while keeping the core narrow-leadership mechanism.
+    when_this_may_fail: >
+      In mega-cap-led bull markets, narrow leadership can persist for long periods without
+      becoming drawdown-prone.
+    data_quality_or_leakage_risks: >
+      Uses point-in-time public market features. QQQE and MMDI leadership stress have
+      shorter histories, so early folds may rely more heavily on available alternatives.
+    minimum_data_coverage_requirement: >
+      At least 8 years of expanding-window history and sufficient leadership, semiconductor,
+      and breadth observations to form alerts in yearly folds.
+    validation_plan:
+      - future 60BD MDD hit rate versus base rate
+      - alert burden versus I002_H003 and prior high-coverage leadership ideas
+      - base-rate lift and positive-lift fold count
+      - event coverage and false calm events
+      - median and mean lead time
+      - purged walk-forward validation with training-window quantiles only
+      - review of false calm episodes after narrow rallies
+    dashboard_implication: >
+      If coverage improves without erasing lift, this can remain a shadow narrow-leadership
+      companion candidate.
+    priority_score: 8
+    future_data_requirement: []
+
+  - hypothesis_id: I003_H004
+    title: Simplified false repair with unresolved damage predicts 30BD repair failure
+    plain_english_thesis: >
+      When MMDI appears to be repairing after stress but price damage remains unresolved and
+      QQQ is bouncing from a trough, the market may be vulnerable to failed repair and a
+      renewed 30-business-day drawdown.
+    economic_market_mechanism: >
+      Repair failure often appears as improving risk indicators before price structure has
+      healed. I002_H004 required renewed tape stress at the same time and became too narrow.
+      This version tests the simpler idea that indicator repair plus unresolved damage is
+      enough to flag fragile rebounds.
+    feature_families_used:
+      - MMDI signal layer
+      - Price / Trend Structure
+      - Drawdown / Distance from High
+    exact_feature_columns_used:
+      - mmdi_falling_from_high
+      - mmdi_low_after_high
+      - MMDI_HIGH
+      - failed_reclaim_ma50
+      - failed_reclaim_ma200
+      - price_vs_ma50
+      - dist_52w_high
+      - rebound_from_trough_20d
+    expected_direction:
+      mmdi_falling_from_high: lower_is_repair_context
+      mmdi_low_after_high: true_is_repair_context
+      MMDI_HIGH: true_is_worse
+      failed_reclaim_ma50: true_is_worse
+      failed_reclaim_ma200: true_is_worse
+      price_vs_ma50: lower_is_worse
+      dist_52w_high: lower_is_worse
+      rebound_from_trough_20d: higher_is_bounce_context
+    target_horizon: 30BD
+    target_type: repair_failure
+    target_definition: future 30BD maximum drawdown <= -8%
+    trigger_logic_pseudocode: >
+      (mmdi_falling_from_high <= training 25th percentile OR mmdi_low_after_high) AND
+      (MMDI_HIGH OR failed_reclaim_ma50 OR failed_reclaim_ma200 OR
+       price_vs_ma50 <= 0 OR dist_52w_high <= -5%) AND
+      rebound_from_trough_20d >= training 60th percentile
+    why_this_should_work: >
+      The prior false-repair trigger failed because simultaneous repair, damage, bounce, and
+      renewed stress left almost no valid alert set. Removing the renewed-stress gate tests
+      whether the mechanism itself has signal before adding complexity back.
+    when_this_may_fail: >
+      It may alert during healthy recoveries where price structure is still healing but
+      liquidity and earnings support continue to improve.
+    data_quality_or_leakage_risks: >
+      Uses point-in-time price and MMDI state features. Leakage risk is low if all features
+      are computed from close-to-date information only.
+    minimum_data_coverage_requirement: >
+      At least 8 years of expanding-window history and non-null MMDI repair, price damage,
+      and rebound context observations.
+    validation_plan:
+      - future 30BD MDD hit rate versus base rate
+      - alert burden versus I002_H004
+      - base-rate lift and alert hit rate
+      - event coverage and false calm events
+      - false repair event inspection by lead time
+      - purged walk-forward validation with training-window quantiles only
+      - yearly fold stability
+    dashboard_implication: >
+      If this still fails, the false-repair idea should be rejected or moved to a different
+      target definition before any dashboard-candidate discussion.
+    priority_score: 6
+    future_data_requirement: []
+
+  - hypothesis_id: I003_H005
+    title: R2 quiet plus MMDI stress confirmed by volatility or credit predicts false calm
+    plain_english_thesis: >
+      When the dashboard's R2 state is quiet but MMDI remains elevated or accelerating,
+      QQQ false-calm risk should rise only if an independent volatility or credit channel
+      confirms the stress.
+    economic_market_mechanism: >
+      I002_H005 showed that R2 quiet plus MMDI acceleration covered many drawdown events but
+      was too broad. The stricter version treats false calm as a second-stage condition:
+      quiet R2 plus MMDI stress is only actionable when downside volatility or credit
+      deterioration independently confirms the risk.
+    feature_families_used:
+      - R2 signal layer
+      - MMDI signal layer
+      - Volatility / Range / Path Risk
+      - Credit / Funding Stress
+    exact_feature_columns_used:
+      - R2_ACTIVE
+      - R2_STRESS_COUNT
+      - MMDI
+      - MMDI_10D_CHANGE
+      - MMDI_HIGH
+      - range_20d_vs_252d
+      - vol_20d_vs_252d
+      - credit_not_confirming_equity
+      - hy_oas_change_20d
+    expected_direction:
+      R2_ACTIVE: false_is_quiet_context
+      R2_STRESS_COUNT: lower_is_quiet_context
+      MMDI: higher_is_worse
+      MMDI_10D_CHANGE: higher_is_worse
+      MMDI_HIGH: true_is_worse
+      range_20d_vs_252d: higher_is_worse
+      vol_20d_vs_252d: higher_is_worse
+      credit_not_confirming_equity: true_is_worse
+      hy_oas_change_20d: higher_is_worse
+    target_horizon: 30BD
+    target_type: false_calm_path_risk
+    target_definition: future 30BD maximum drawdown <= -8%
+    trigger_logic_pseudocode: >
+      NOT R2_ACTIVE AND R2_STRESS_COUNT <= 1 AND
+      (MMDI_HIGH OR MMDI >= training 75th percentile OR
+       MMDI_10D_CHANGE >= training 70th percentile) AND
+      (range_20d_vs_252d >= training 75th percentile OR
+       vol_20d_vs_252d >= training 75th percentile OR
+       credit_not_confirming_equity OR
+       hy_oas_change_20d >= training 80th percentile)
+    why_this_should_work: >
+      A broad quiet-R2/MMDI state was not selective enough. Independent confirmation should
+      reduce alert burden while preserving the false-calm episodes most likely to precede
+      real path risk.
+    when_this_may_fail: >
+      It may miss false-calm events where MMDI stress is early but volatility and credit have
+      not yet confirmed. It may also fire after the market has already repriced the risk.
+    data_quality_or_leakage_risks: >
+      Uses dashboard signal-layer features and public market/credit features. No live
+      sentiment or headline features are used for historical validation.
+    minimum_data_coverage_requirement: >
+      At least 8 years of expanding-window history and non-null R2, MMDI, volatility, and
+      credit observations in yearly folds.
+    validation_plan:
+      - future 30BD MDD hit rate versus base rate
+      - alert burden versus I002_H005
+      - base-rate lift and alert hit rate
+      - event coverage and false calm events
+      - false calm days with prior-alert window
+      - purged walk-forward validation with training-window quantiles only
+      - yearly fold stability and lead-time distribution
+    dashboard_implication: >
+      If burden drops materially while lift rises above 1.0, this can remain a contextual
+      shadow overlay rather than a standalone dashboard alert.
+    priority_score: 7
+    future_data_requirement: []

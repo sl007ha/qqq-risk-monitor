@@ -1,0 +1,44 @@
+version: 1
+as_of: 2026-07-01
+source:
+  iteration: iteration_003
+  files:
+    - research_iterations/iteration_003/analysis.md
+    - research_iterations/iteration_003/decision_log.md
+    - research_iterations/iteration_003/next_iteration_plan.md
+
+feature_requests:
+  - request_id: FB001_EARLIER_CROSS_ASSET_LEAD_TIME
+    theme: earlier cross-asset lead-time features
+    motivation: I003_H002 reduced alert burden but did not improve the 0BD median lead time versus I002_H002.
+    desired_capability: Earlier point-in-time stress measures that can separate pre-shock deterioration from same-day volatility confirmation.
+    candidate_data_needs:
+      - point-in-time credit spread acceleration with longer history
+      - funding stress proxies with daily availability and stable history
+      - rates volatility measures with longer point-in-time coverage
+      - dollar and real-yield shock features with explicit release and availability timing
+    usage_guardrail: Do not use any new data source until coverage, point-in-time availability, and leakage risk are documented.
+
+  - request_id: FB002_EVENT_BASED_REPAIR_FEATURES
+    theme: event-based repair features if false repair is revisited
+    motivation: I002_H004 and I003_H004 both failed on the current MMDI-repair plus unresolved-price-damage formulation.
+    desired_capability: Features that describe repair attempts as episodes rather than single-day indicator states.
+    candidate_data_needs:
+      - days since drawdown trough
+      - failed reclaim episode count
+      - lower-high-after-bounce sequence features
+      - breadth recovery failure after price bounce
+      - MMDI repair duration and relapse flags
+    usage_guardrail: Revisit false repair only with a changed target or event-based features; do not retest the same single-day formulation.
+
+  - request_id: FB003_LEADERSHIP_CONTEXT_FOR_FALSE_CALM
+    theme: leadership context features for false-calm filtering
+    motivation: I003_H003 showed high event coverage but excessive alert burden; I002_H003 showed lower-burden leadership lead time.
+    desired_capability: Leadership context features that can filter false-calm or downside-volatility alerts without becoming broad standalone warnings.
+    candidate_data_needs:
+      - stable equal-weight Nasdaq proxy coverage
+      - narrow leadership persistence measures
+      - semiconductor confirmation persistence
+      - Mag7 concentration and breadth persistence
+      - overlap metrics between leadership alerts and false-calm alerts
+    usage_guardrail: Treat leadership as context until event-level evidence shows it improves alert burden or false calm without degrading lead time.
