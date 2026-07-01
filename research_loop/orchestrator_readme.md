@@ -42,6 +42,8 @@ python research_loop/mark_task_result.py <TASK_ID> completed --run-validators
 - downstream tasks remain blocked;
 - validator reports are written to `research_loop/task_results/<TASK_ID>/`.
 
+When `completed --run-validators` is used, `mark_task_result.py` also checks every declared task output. Missing outputs are recorded in `validator_report.yaml` and `validator_report.md`, force the task to `needs_patch`, and prevent downstream tasks from being unblocked.
+
 ## Render The Current Next Task
 
 The current active next task is FD_001 feature-to-hypothesis planning:
@@ -67,6 +69,8 @@ For FD_001 feature-to-hypothesis planning, the declared validators include:
 - hypothesis plan validation against `hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml`.
 
 The hypothesis plan validator is intended to run only after the planning task writes its plan YAML. CI compiles it on every PR, but skips execution while the plan file is absent.
+
+`validate_task_outputs.py --task-id <TASK_ID>` is available as a standalone check for declared outputs. For completion marking, the same output check is enforced internally by `mark_task_result.py` whenever `completed --run-validators` is used.
 
 To use a different PR base:
 

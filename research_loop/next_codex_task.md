@@ -185,6 +185,7 @@ validators:
 - research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_combined
 - research_loop/validators/validate_hypothesis_plan.py --plan-yaml hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml
   --snapshot-dir feature_lab/FD_001_combined
+completion_output_check: enforced_by_mark_task_result_completed_run_validators
 human_approval_required: false
 ```
 

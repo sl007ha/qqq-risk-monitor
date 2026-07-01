@@ -18,6 +18,7 @@ DEFAULT_STATE = REPO_ROOT / "research_loop" / "research_state.yaml"
 DEFAULT_QUEUE = REPO_ROOT / "research_loop" / "task_queue.yaml"
 DEFAULT_REPORT_DIR = REPO_ROOT / "research_loop" / "task_results"
 VALID_STATUSES = {"completed", "failed", "blocked", "needs_patch"}
+GLOB_CHARS = set("*?[]")
 
 
 def now_utc() -> str:
@@ -74,8 +75,67 @@ def append_next_task(tasks: list[dict[str, Any]], path: Path) -> str:
     return str(task["task_id"])
 
 
+def as_list(value: Any) -> list[Any]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    return [value]
+
+
 def repo_path(path: Path) -> Path:
     return path if path.is_absolute() else REPO_ROOT / path
+
+
+def display_path(path: Path) -> str:
+    try:
+        return path.relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def declared_outputs(task: dict[str, Any]) -> list[str]:
+    return [str(output).strip() for output in as_list(task.get("outputs")) if str(output).strip()]
+
+
+def output_exists(output: str) -> bool:
+    if any(char in output for char in GLOB_CHARS):
+        return bool(list(REPO_ROOT.glob(output)))
+    return (REPO_ROOT / output).exists()
+
+
+def build_output_check_result(task: dict[str, Any]) -> dict[str, Any]:
+    task_id = str(task.get("task_id"))
+    outputs = declared_outputs(task)
+    missing = [output for output in outputs if not output_exists(output)]
+    if missing:
+        stdout_lines = [
+            "TASK_OUTPUT_CHECK_FAILED",
+            f"task_id {task_id}",
+            "missing_outputs",
+            *[f"- {output}" for output in missing],
+        ]
+        return {
+            "command": f"declared task output check for {task_id}",
+            "argv": ["internal_output_check", "--task-id", task_id],
+            "return_code": 1,
+            "stdout": "\n".join(stdout_lines) + "\n",
+            "stderr": "",
+            "passed": False,
+            "missing_outputs": missing,
+            "output_count": len(outputs),
+        }
+    stdout = f"TASK_OUTPUT_CHECK_PASSED\ntask_id {task_id}\noutput_count {len(outputs)}\n"
+    return {
+        "command": f"declared task output check for {task_id}",
+        "argv": ["internal_output_check", "--task-id", task_id],
+        "return_code": 0,
+        "stdout": stdout,
+        "stderr": "",
+        "passed": True,
+        "missing_outputs": [],
+        "output_count": len(outputs),
+    }
 
 
 def normalize_validator_command(command: str, base_ref: str) -> list[str]:
@@ -94,6 +154,7 @@ def run_validators(
     task: dict[str, Any],
     base_ref: str,
     report_dir: Path,
+    include_output_check: bool = False,
 ) -> tuple[bool, Path, Path]:
     validators = [str(item) for item in task.get("validators") or []]
     task_id = str(task.get("task_id"))
@@ -121,6 +182,9 @@ def run_validators(
                 "passed": proc.returncode == 0,
             }
         )
+
+    if include_output_check:
+        results.append(build_output_check_result(task))
 
     all_passed = all(result["passed"] for result in results)
     report = {
@@ -199,7 +263,7 @@ def update_research_state(
     if appended_task_id:
         event["appended_task_id"] = appended_task_id
     if validator_report:
-        event["validator_report"] = validator_report.relative_to(REPO_ROOT).as_posix()
+        event["validator_report"] = display_path(validator_report)
     history.append(event)
     orchestrator["last_task_result"] = event
     if status in {"failed", "blocked", "needs_patch"}:
@@ -237,10 +301,14 @@ def main() -> int:
             task,
             args.base_ref,
             repo_path(args.validator_report_dir),
+            include_output_check=True,
         )
         if not validators_passed:
             effective_status = "needs_patch"
-            args.note = (args.note + " " if args.note else "") + "Validator failure blocked completion."
+            args.note = (
+                (args.note + " " if args.note else "")
+                + "Validator or output failure blocked completion."
+            )
     elif args.status == "completed":
         print("WARNING: marking completed without --run-validators; validator pass is not implied.")
 
@@ -249,9 +317,9 @@ def main() -> int:
     if args.note:
         task["last_result_note"] = args.note
     if validator_report:
-        task["last_validator_report"] = validator_report.relative_to(REPO_ROOT).as_posix()
+        task["last_validator_report"] = display_path(validator_report)
     if validator_report_md:
-        task["last_validator_report_md"] = validator_report_md.relative_to(REPO_ROOT).as_posix()
+        task["last_validator_report_md"] = display_path(validator_report_md)
 
     appended_task_id = None
     if args.append_next_task:
@@ -277,7 +345,7 @@ def main() -> int:
     if args.status == "completed" and effective_status != "completed":
         print("completion blocked by validator failure")
     if validator_report:
-        print(f"validator_report {validator_report.relative_to(REPO_ROOT).as_posix()}")
+        print(f"validator_report {display_path(validator_report)}")
     if unblocked:
         print("unblocked " + ", ".join(unblocked))
     if appended_task_id:
