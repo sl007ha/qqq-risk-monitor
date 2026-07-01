@@ -33,6 +33,7 @@ jobs:
           python -m py_compile research_loop/validators/validate_no_protected_diff.py
           python -m py_compile research_loop/validators/validate_no_protected_pr_diff.py
           python -m py_compile research_loop/validators/validate_feature_snapshot.py
+          python -m py_compile research_loop/validators/validate_hypothesis_plan.py
           python -m py_compile research_loop/validators/validate_task_queue_consistency.py
 
       - name: Run research-loop guardrail validators
@@ -41,3 +42,11 @@ jobs:
           python research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_combined
           python research_loop/validators/validate_task_queue_consistency.py
           python research_loop/run_next_task.py
+
+      - name: Run hypothesis plan validator when plan exists
+        run: |
+          if [ -f hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml ]; then
+            python research_loop/validators/validate_hypothesis_plan.py --plan-yaml hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml --snapshot-dir feature_lab/FD_001_combined
+          else
+            echo "Skipping hypothesis plan validator because hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml does not exist yet."
+          fi

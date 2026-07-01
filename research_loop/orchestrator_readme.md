@@ -60,6 +60,14 @@ Use the task's declared validators:
 python research_loop/mark_task_result.py FD_001_FEATURE_TO_HYPOTHESIS_PLANNING completed --run-validators
 ```
 
+For FD_001 feature-to-hypothesis planning, the declared validators include:
+
+- PR-level protected-file diff validation;
+- frozen FD_001 combined feature snapshot validation;
+- hypothesis plan validation against `hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml`.
+
+The hypothesis plan validator is intended to run only after the planning task writes its plan YAML. CI compiles it on every PR, but skips execution while the plan file is absent.
+
 To use a different PR base:
 
 ```bash

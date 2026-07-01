@@ -56,6 +56,7 @@ Convert the accepted candidate_hypothesis_design columns from the frozen FD_001 
 
 - research_loop/validators/validate_no_protected_pr_diff.py
 - research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_combined
+- research_loop/validators/validate_hypothesis_plan.py --plan-yaml hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml --snapshot-dir feature_lab/FD_001_combined
 
 ## Hard Contract
 
@@ -182,6 +183,8 @@ gates:
 validators:
 - research_loop/validators/validate_no_protected_pr_diff.py
 - research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_combined
+- research_loop/validators/validate_hypothesis_plan.py --plan-yaml hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml
+  --snapshot-dir feature_lab/FD_001_combined
 human_approval_required: false
 ```
 

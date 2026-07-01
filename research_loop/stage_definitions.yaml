@@ -218,6 +218,7 @@ stages:
     validators:
       - research_loop/validators/validate_no_protected_pr_diff.py
       - research_loop/validators/validate_task_queue_consistency.py
+      - research_loop/validators/validate_hypothesis_plan.py --plan-yaml hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml --snapshot-dir feature_lab/FD_001_combined
     next_stage_on_pass: HYPOTHESIS_VALIDATION
     next_stage_on_fail: FEATURE_TO_HYPOTHESIS_PLANNING
     human_approval_required: false
