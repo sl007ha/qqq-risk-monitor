@@ -1,10 +1,10 @@
 version: 1
 as_of: 2026-07-01
 source:
-  iteration: iteration_003
+  iteration: iteration_004_fd001
   files:
-    - research_iterations/iteration_003/decision_log.md
-    - research_iterations/iteration_003/analysis.md
+    - research_iterations/iteration_004_fd001/decision_log.md
+    - research_iterations/iteration_004_fd001/analysis.md
 
 rejected_hypotheses:
   - hypothesis_id: I003_H002
@@ -43,6 +43,45 @@ rejected_hypotheses:
     reason: Leadership coverage companion covered many events, but alert burden was too high and selectivity too weak for a standalone alert.
     lesson: Leadership evidence should be used as context or a second-stage overlay, not as the broad standalone I003_H003 trigger.
 
+  - hypothesis_id: FD001_H003_VOL_DISAGREEMENT_REGIME_SHIFT
+    status: rewrite_as_context_not_standalone
+    source_iteration: iteration_004_fd001
+    parent_feature_snapshot_id: FD_001_combined
+    evidence:
+      base_rate_lift: 1.0810090824572696
+      alert_burden: 0.050741775962158675
+      event_coverage: 0.3176470588235294
+      positive_lift_folds: "4/19"
+      median_lead_bd: 10.0
+    reason: Low burden and longer lead time were not enough to overcome weak lift, low event coverage, and poor fold stability.
+    lesson: Volatility disagreement should be used as context or confirmation overlay, not as a standalone alert.
+
+  - hypothesis_id: FD001_H004_FALSE_CALM_VOL_DISAGREEMENT_CONFIRMATION
+    status: dropped_direct_trigger
+    source_iteration: iteration_004_fd001
+    parent_feature_snapshot_id: FD_001_combined
+    evidence:
+      base_rate_lift: 0.8721987810595405
+      alert_burden: 0.02257579015265534
+      event_coverage: 0.17647058823529413
+      positive_lift_folds: "4/19"
+      median_lead_bd: 12.0
+    reason: Very low burden and longer lead time did not compensate for sub-base hit-rate lift and low event coverage.
+    lesson: Do not retest this false-calm plus volatility-disagreement trigger directly without a changed target or trigger structure.
+
+  - hypothesis_id: FD001_H001_FALSE_CALM_CONFIRMED_DOWNSIDE
+    status: dropped_direct_trigger
+    source_iteration: iteration_004_fd001
+    parent_feature_snapshot_id: FD_001_combined
+    evidence:
+      base_rate_lift: 0.8025139574660342
+      alert_burden: 0.13933849401829698
+      event_coverage: 0.4878048780487805
+      positive_lift_folds: "7/19"
+      median_lead_bd: 3.0
+    reason: Confirmed false-calm deterioration did not improve hit-rate lift and carried high burden.
+    lesson: FD_001 confirmed false-calm is not sufficient as a direct trigger against the 30BD -8% MDD target.
+
 failed_lessons:
   false_repair:
     related_hypotheses:
@@ -54,3 +93,8 @@ failed_lessons:
       - I002_H003
       - I003_H003
     lesson: Tight leadership logic has useful low-burden lead time, while relaxed leadership logic is high coverage but too broad.
+  fd001_false_calm:
+    related_hypotheses:
+      - FD001_H001_FALSE_CALM_CONFIRMED_DOWNSIDE
+      - FD001_H004_FALSE_CALM_VOL_DISAGREEMENT_CONFIRMATION
+    lesson: FD_001 false-calm features did not work as direct triggers in iteration_004_fd001; keep them as diagnostics or redesign with a different target.

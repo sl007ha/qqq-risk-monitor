@@ -1,0 +1,56 @@
+task_id: FD_001_WALK_FORWARD_TEST
+base_ref: origin/main
+started_at_utc: '2026-07-01T09:29:20+00:00'
+finished_at_utc: '2026-07-01T09:29:21+00:00'
+validator_count: 3
+all_passed: true
+results:
+- command: research_loop/validators/validate_no_protected_pr_diff.py
+  argv:
+  - C:\Users\z003r88b\Documents\Metal\qqq-risk-monitor\.venv\Scripts\python.exe
+  - research_loop/validators/validate_no_protected_pr_diff.py
+  - --base-ref
+  - origin/main
+  return_code: 0
+  stdout: 'PROTECTED_PR_DIFF_CHECK_PASSED
+
+    base_ref origin/main
+
+    protected_hits 0
+
+    '
+  stderr: ''
+  passed: true
+- command: research_loop/validators/validate_task_outputs.py --task-id FD_001_WALK_FORWARD_TEST
+  argv:
+  - C:\Users\z003r88b\Documents\Metal\qqq-risk-monitor\.venv\Scripts\python.exe
+  - research_loop/validators/validate_task_outputs.py
+  - --task-id
+  - FD_001_WALK_FORWARD_TEST
+  return_code: 0
+  stdout: 'TASK_OUTPUT_CHECK_PASSED
+
+    task_id FD_001_WALK_FORWARD_TEST
+
+    output_count 5
+
+    '
+  stderr: ''
+  passed: true
+- command: declared task output check for FD_001_WALK_FORWARD_TEST
+  argv:
+  - internal_output_check
+  - --task-id
+  - FD_001_WALK_FORWARD_TEST
+  return_code: 0
+  stdout: 'TASK_OUTPUT_CHECK_PASSED
+
+    task_id FD_001_WALK_FORWARD_TEST
+
+    output_count 5
+
+    '
+  stderr: ''
+  passed: true
+  missing_outputs: []
+  output_count: 5

@@ -42,7 +42,27 @@ jobs:
           python research_loop/validators/validate_no_protected_pr_diff.py --base-ref origin/main
           python research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_combined
           python research_loop/validators/validate_task_queue_consistency.py
-          python research_loop/run_next_task.py
+          python - <<'PY'
+          import subprocess
+          import yaml
+
+          with open("research_loop/task_queue.yaml", "r", encoding="utf-8") as f:
+              queue = yaml.safe_load(f) or {}
+
+          tasks = queue.get("tasks", [])
+          completed = {task.get("task_id") for task in tasks if task.get("status") == "completed"}
+          ready = [
+              task
+              for task in tasks
+              if task.get("status") == "ready"
+              and all(dep in completed for dep in task.get("blocked_by", []))
+          ]
+
+          if ready:
+              subprocess.check_call(["python", "research_loop/run_next_task.py"])
+          else:
+              print("Skipping run_next_task.py because no ready research-loop task exists.")
+          PY
 
       - name: Run hypothesis plan validator when plan exists
         run: |

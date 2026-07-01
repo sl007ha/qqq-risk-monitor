@@ -1,0 +1,114 @@
+version: 1
+iteration_id: iteration_004_fd001
+parent_feature_snapshot_id: FD_001_combined
+parent_feature_snapshot_path: feature_lab/FD_001_combined/
+validation_source: hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml
+hypotheses:
+  - hypothesis_id: FD001_H001_FALSE_CALM_CONFIRMED_DOWNSIDE
+    title: FD_001 confirmed false-calm downside risk
+    status: validated_for_research_test
+    parent_hypothesis_or_rewrite_queue_item: RQ004_FALSE_CALM_BURDEN_REDUCTION
+    target_type: future_30bd_mdd_le_-8pct
+    horizon_bd: 30
+    mdd_threshold: -0.08
+    source_feature_columns:
+      - freq_003_false_calm_confirmed_flag
+      - freq_003_false_calm_internal_deterioration_count
+    context_columns:
+      - freq_010_safe_haven_confirmation_score
+      - freq_010_riskoff_confirmation_flag
+      - freq_010_safe_haven_rotation_state
+    descriptive_columns:
+      - freq_003_quiet_state
+      - freq_003_false_calm_missing_component_count
+      - freq_003_false_calm_unknown_due_to_missing_flag
+    diagnostics_columns:
+      - freq_004_repair_episode_active
+      - freq_004_repair_failure_pressure_count
+    trigger_rule: freq_003_false_calm_confirmed_flag == 1 and freq_003_false_calm_internal_deterioration_count >= 3
+    thresholds_predeclared:
+      freq_003_false_calm_confirmed_flag: 1
+      freq_003_false_calm_internal_deterioration_count: 3
+    no_threshold_optimization: true
+
+  - hypothesis_id: FD001_H002_VOL_TERM_PERSISTENT_ACUTE_STRESS
+    title: FD_001 volatility term persistent acute stress
+    status: validated_for_research_test
+    parent_hypothesis_or_rewrite_queue_item: RQ004_DOWNSIDE_VOL_COMPARISON
+    target_type: future_15bd_mdd_le_-5pct
+    horizon_bd: 15
+    mdd_threshold: -0.05
+    source_feature_columns:
+      - freq_007_vol_term_daily_stress_count
+      - freq_007_vol_term_stress_persistence_5d
+      - freq_007_vol_term_stress_persistence_20d
+    context_columns:
+      - freq_010_safe_haven_confirmation_score
+      - freq_010_rates_led_stress_flag
+      - freq_010_riskoff_confirmation_flag
+    descriptive_columns:
+      - freq_007_vol_term_persistent_stress_flag
+    diagnostics_columns:
+      - freq_004_repair_episode_active
+    trigger_rule: freq_007_vol_term_daily_stress_count >= 2 and freq_007_vol_term_stress_persistence_5d >= 0.60 and freq_007_vol_term_stress_persistence_20d >= 0.35
+    thresholds_predeclared:
+      freq_007_vol_term_daily_stress_count: 2
+      freq_007_vol_term_stress_persistence_5d: 0.60
+      freq_007_vol_term_stress_persistence_20d: 0.35
+    no_threshold_optimization: true
+
+  - hypothesis_id: FD001_H003_VOL_DISAGREEMENT_REGIME_SHIFT
+    title: FD_001 volatility disagreement regime shift
+    status: validated_for_research_test
+    parent_hypothesis_or_rewrite_queue_item: RQ004_DOWNSIDE_VOL_COMPARISON
+    target_type: future_30bd_mdd_le_-8pct
+    horizon_bd: 30
+    mdd_threshold: -0.08
+    source_feature_columns:
+      - freq_008_vol_disagreement_score_pct
+      - freq_008_vol_disagreement_rank_change_20d
+      - freq_008_vol_disagreement_flag
+    context_columns:
+      - freq_010_safe_haven_confirmation_score
+      - freq_010_safe_haven_rotation_state
+    descriptive_columns:
+      - freq_007_vol_term_persistent_stress_flag
+    diagnostics_columns:
+      - freq_004_repair_episode_active
+      - freq_004_repair_episode_quality_score
+    trigger_rule: freq_008_vol_disagreement_flag == 1 and freq_008_vol_disagreement_score_pct >= 0.90 and freq_008_vol_disagreement_rank_change_20d >= 0.50
+    thresholds_predeclared:
+      freq_008_vol_disagreement_flag: 1
+      freq_008_vol_disagreement_score_pct: 0.90
+      freq_008_vol_disagreement_rank_change_20d: 0.50
+    no_threshold_optimization: true
+
+  - hypothesis_id: FD001_H004_FALSE_CALM_VOL_DISAGREEMENT_CONFIRMATION
+    title: FD_001 false-calm volatility disagreement confirmation
+    status: validated_for_research_test
+    parent_hypothesis_or_rewrite_queue_item: RQ004_FALSE_CALM_BURDEN_REDUCTION
+    target_type: future_30bd_mdd_le_-8pct
+    horizon_bd: 30
+    mdd_threshold: -0.08
+    source_feature_columns:
+      - freq_003_false_calm_possible_flag
+      - freq_003_false_calm_internal_deterioration_count
+      - freq_008_vol_disagreement_score_pct
+    context_columns:
+      - freq_010_safe_haven_confirmation_score
+      - freq_010_riskoff_confirmation_flag
+      - freq_010_safe_haven_rotation_state
+    descriptive_columns:
+      - freq_003_quiet_state
+      - freq_003_false_calm_missing_component_count
+      - freq_003_false_calm_unknown_due_to_missing_flag
+    diagnostics_columns:
+      - freq_004_repair_episode_active
+      - freq_004_repair_failure_pressure_count
+      - freq_004_repair_relapse_flag
+    trigger_rule: freq_003_false_calm_possible_flag == 1 and freq_003_false_calm_internal_deterioration_count >= 2 and freq_008_vol_disagreement_score_pct >= 0.85
+    thresholds_predeclared:
+      freq_003_false_calm_possible_flag: 1
+      freq_003_false_calm_internal_deterioration_count: 2
+      freq_008_vol_disagreement_score_pct: 0.85
+    no_threshold_optimization: true

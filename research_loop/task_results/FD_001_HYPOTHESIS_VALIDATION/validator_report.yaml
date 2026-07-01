@@ -1,0 +1,76 @@
+task_id: FD_001_HYPOTHESIS_VALIDATION
+base_ref: origin/main
+started_at_utc: '2026-07-01T09:26:45+00:00'
+finished_at_utc: '2026-07-01T09:26:50+00:00'
+validator_count: 4
+all_passed: true
+results:
+- command: research_loop/validators/validate_no_protected_pr_diff.py
+  argv:
+  - C:\Users\z003r88b\Documents\Metal\qqq-risk-monitor\.venv\Scripts\python.exe
+  - research_loop/validators/validate_no_protected_pr_diff.py
+  - --base-ref
+  - origin/main
+  return_code: 0
+  stdout: 'PROTECTED_PR_DIFF_CHECK_PASSED
+
+    base_ref origin/main
+
+    protected_hits 0
+
+    '
+  stderr: ''
+  passed: true
+- command: research_loop/validators/validate_hypothesis_plan.py --plan-yaml hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml
+    --snapshot-dir feature_lab/FD_001_combined
+  argv:
+  - C:\Users\z003r88b\Documents\Metal\qqq-risk-monitor\.venv\Scripts\python.exe
+  - research_loop/validators/validate_hypothesis_plan.py
+  - --plan-yaml
+  - hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml
+  - --snapshot-dir
+  - feature_lab/FD_001_combined
+  return_code: 0
+  stdout: 'HYPOTHESIS_PLAN_CHECK_PASSED
+
+    candidate_count 4
+
+    hypothesis_ids FD001_H001_FALSE_CALM_CONFIRMED_DOWNSIDE, FD001_H002_VOL_TERM_PERSISTENT_ACUTE_STRESS,
+    FD001_H003_VOL_DISAGREEMENT_REGIME_SHIFT, FD001_H004_FALSE_CALM_VOL_DISAGREEMENT_CONFIRMATION
+
+    '
+  stderr: ''
+  passed: true
+- command: research_loop/validators/validate_task_outputs.py --task-id FD_001_HYPOTHESIS_VALIDATION
+  argv:
+  - C:\Users\z003r88b\Documents\Metal\qqq-risk-monitor\.venv\Scripts\python.exe
+  - research_loop/validators/validate_task_outputs.py
+  - --task-id
+  - FD_001_HYPOTHESIS_VALIDATION
+  return_code: 0
+  stdout: 'TASK_OUTPUT_CHECK_PASSED
+
+    task_id FD_001_HYPOTHESIS_VALIDATION
+
+    output_count 3
+
+    '
+  stderr: ''
+  passed: true
+- command: declared task output check for FD_001_HYPOTHESIS_VALIDATION
+  argv:
+  - internal_output_check
+  - --task-id
+  - FD_001_HYPOTHESIS_VALIDATION
+  return_code: 0
+  stdout: 'TASK_OUTPUT_CHECK_PASSED
+
+    task_id FD_001_HYPOTHESIS_VALIDATION
+
+    output_count 3
+
+    '
+  stderr: ''
+  passed: true
+  missing_outputs: []
+  output_count: 3

@@ -1,10 +1,10 @@
 version: 1
 as_of: 2026-07-01
 source:
-  iteration: iteration_003
+  iteration: iteration_004_fd001
   files:
-    - research_iterations/iteration_003/decision_log.md
-    - research_iterations/iteration_003/next_iteration_plan.md
+    - research_iterations/iteration_004_fd001/decision_log.md
+    - research_iterations/iteration_004_fd001/next_iteration_plan.md
 
 rewrite_queue:
   - queue_id: RQ004_FALSE_CALM_BURDEN_REDUCTION
@@ -56,4 +56,22 @@ rewrite_queue:
       - preserve lead_time evidence
     hard_rules:
       - do not promote I003_H003 standalone
+      - no production dashboard changes
+
+  - queue_id: RQ005_FD001_VOL_TERM_BURDEN_REDUCTION
+    title: FD001_H002 vol-term persistence burden reduction
+    priority: high
+    source_hypotheses:
+      - FD001_H002_VOL_TERM_PERSISTENT_ACUTE_STRESS
+    parent_feature_snapshot_id: FD_001_combined
+    evidence_summary: FD001_H002 reached 1.46x lift and 66.06% event coverage, but burden was 17.39% and positive-lift folds were only 8/19.
+    research_task: Rewrite the vol-term persistence trigger to reduce burden and improve yearly fold stability without optimizing thresholds.
+    success_focus:
+      - lower alert_burden
+      - preserve event_coverage
+      - improve positive_lift_folds
+      - preserve or improve median_lead
+    hard_rules:
+      - no threshold optimization
+      - use context-only columns only as companions or confirmation gates
       - no production dashboard changes

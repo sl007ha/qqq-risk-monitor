@@ -1,0 +1,5 @@
+hypothesis_id,source_columns_exist,roles_correct,target_explicit,trigger_deterministic,thresholds_predeclared,not_duplicate,no_context_only_standalone,no_diagnostics_direct,no_leakage_columns,validation_status,notes
+FD001_H001_FALSE_CALM_CONFIRMED_DOWNSIDE,true,true,true,true,true,true,true,true,true,passed,"Confirmed false-calm trigger uses only candidate columns and carries context/diagnostics only as companions."
+FD001_H002_VOL_TERM_PERSISTENT_ACUTE_STRESS,true,true,true,true,true,true,true,true,true,passed,"Vol-term persistence trigger uses only FREQ_007 candidate columns; later analysis must caveat shorter VIX9D-era coverage."
+FD001_H003_VOL_DISAGREEMENT_REGIME_SHIFT,true,true,true,true,true,true,true,true,true,passed,"Vol-disagreement trigger uses only FREQ_008 candidate columns and is distinct from rejected cross-asset and leadership standalone variants."
+FD001_H004_FALSE_CALM_VOL_DISAGREEMENT_CONFIRMATION,true,true,true,true,true,true,true,true,true,passed,"False-calm plus vol-disagreement confirmation uses only candidate columns and preserves missingness columns as descriptive companions."

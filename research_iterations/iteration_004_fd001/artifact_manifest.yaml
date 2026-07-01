@@ -1,0 +1,35 @@
+version: 1
+iteration_id: iteration_004_fd001
+parent_feature_snapshot_id: FD_001_combined
+artifacts:
+  preflight:
+    - research_iterations/iteration_004_fd001/preflight.md
+  planning:
+    - hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml
+    - feature_research/FD_001/feature_to_hypothesis_plan.md
+  validation:
+    - research_iterations/iteration_004_fd001/hypothesis_validation_report.csv
+    - research_iterations/iteration_004_fd001/hypothesis_validation_report.md
+    - research_iterations/iteration_004_fd001/hypotheses.yaml
+  test_implementation:
+    - qqq_autoresearch/hypothesis_tests_iteration_004_fd001.py
+    - run_hypothesis_tests_iteration_004_fd001.py
+  walk_forward_outputs:
+    - research_iterations/iteration_004_fd001/tests/hypothesis_test_summary.csv
+    - research_iterations/iteration_004_fd001/tests/hypothesis_test_folds.csv
+    - research_iterations/iteration_004_fd001/tests/hypothesis_test_daily_signals.csv
+    - research_iterations/iteration_004_fd001/tests/hypothesis_test_events.csv
+    - research_iterations/iteration_004_fd001/tests/hypothesis_test_report.html
+    - research_iterations/iteration_004_fd001/tests/hypothesis_test_summary.json
+  analysis:
+    - research_iterations/iteration_004_fd001/analysis.md
+    - research_iterations/iteration_004_fd001/decision_log.md
+    - research_iterations/iteration_004_fd001/decision_log.yaml
+    - research_iterations/iteration_004_fd001/next_iteration_plan.md
+    - research_iterations/iteration_004_fd001/artifact_manifest.yaml
+    - research_iterations/iteration_004_fd001/closed_loop_review.md
+guardrails:
+  production_dashboard_modified: false
+  production_feature_construction_modified: false
+  threshold_optimization_used: false
+  external_data_sources_added: false

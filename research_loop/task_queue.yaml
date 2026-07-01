@@ -1,121 +1,351 @@
 version: 1
 as_of: 2026-07-01
 purpose: Machine-readable queue for Research Orchestrator v1.
-
 queue_policy:
   first_ready_task_wins: true
   blocked_tasks_require_completed_dependencies: true
   codex_task_output: research_loop/next_codex_task.md
   no_external_services: true
   no_production_file_changes: true
-
 tasks:
-  - task_id: FD_001_BATCH_B_V2_QA_AND_COMBINED_SNAPSHOT
-    status: completed
-    priority: 1
-    stage: FEATURE_LAB_REVIEW
-    title: Run FD_001 Batch B v2 QA patch and create combined experimental snapshot
-    objective: >
-      Patch FD_001 Batch B into a v2 feature lab with explicit false-calm
-      missing-uncertainty flags, then rebuild the FD_001 combined experimental
-      snapshot from Batch A v2 and Batch B v2.
-    prompt_template: prompts/stage_feature_lab_review.md
-    inputs:
-      - feature_lab/FD_001_batch_B/run_feature_lab_fd001_batch_b.py
-      - feature_lab/FD_001_batch_B/validation_summary.md
-      - feature_lab/FD_001_batch_B/experimental_feature_snapshot.csv
-      - feature_lab/FD_001_batch_A_v2/validation_summary.md
-      - feature_lab/FD_001_batch_A_v2/experimental_feature_snapshot.csv
-      - outputs/qqq_r2_mmdi_v1_3_1_all_features_daily_wide.csv
-    outputs:
-      - feature_lab/FD_001_batch_B_v2/run_feature_lab_fd001_batch_b_v2.py
-      - feature_lab/FD_001_batch_B_v2/experimental_feature_snapshot.csv
-      - feature_lab/FD_001_batch_B_v2/experimental_feature_inventory.csv
-      - feature_lab/FD_001_batch_B_v2/coverage_summary.csv
-      - feature_lab/FD_001_batch_B_v2/validation_summary.md
-      - feature_lab/FD_001_batch_B_v2/feature_snapshot_manifest.yaml
-      - feature_lab/FD_001_combined/experimental_feature_snapshot.csv
-      - feature_lab/FD_001_combined/experimental_feature_inventory.csv
-      - feature_lab/FD_001_combined/coverage_summary.csv
-      - feature_lab/FD_001_combined/validation_summary.md
-      - feature_lab/FD_001_combined/feature_snapshot_manifest.yaml
-      - feature_lab/FD_001_combined/next_step_recommendation.md
-    allowed_files:
-      - feature_lab/FD_001_batch_B_v2/
-      - feature_lab/FD_001_combined/
-      - research_loop/
-    blocked_files:
-      - qqq_autoresearch/features.py
-      - qqq_autoresearch/data_sources.py
-      - qqq_autoresearch/config.py
-      - qqq_autoresearch/pipeline.py
-      - qqq_autoresearch/render.py
-      - run_dashboard.py
-      - outputs/
-    gates:
-      - no_hypothesis_tests
-      - no_production_dashboard_logic_changes
-      - no_production_feature_construction_changes
-      - use_existing_daily_wide_input_only
-      - no_future_target_or_future_drawdown_inputs
-    validators:
-      - research_loop/validators/validate_no_protected_pr_diff.py
-      - research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_batch_B_v2
-      - research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_combined
-    human_approval_required: false
-    completed_at_utc: '2026-07-01T06:45:51+00:00'
-    completion_evidence:
-      - feature_lab/FD_001_combined/validation_summary.md
-      - feature_lab/FD_001_combined/next_step_recommendation.md
-    created_from:
-      - feature_lab/FD_001_batch_B/validation_summary.md
-      - feature_lab/FD_001_batch_A_v2/validation_summary.md
+- task_id: FD_001_BATCH_B_V2_QA_AND_COMBINED_SNAPSHOT
+  status: completed
+  priority: 1
+  stage: FEATURE_LAB_REVIEW
+  title: Run FD_001 Batch B v2 QA patch and create combined experimental snapshot
+  objective: 'Patch FD_001 Batch B into a v2 feature lab with explicit false-calm
+    missing-uncertainty flags, then rebuild the FD_001 combined experimental snapshot
+    from Batch A v2 and Batch B v2.
 
-  - task_id: FD_001_FEATURE_TO_HYPOTHESIS_PLANNING
-    status: ready
-    blocked_by:
-      - FD_001_BATCH_B_V2_QA_AND_COMBINED_SNAPSHOT
-    priority: 1
-    stage: FEATURE_TO_HYPOTHESIS_PLANNING
-    title: Plan FD_001-derived hypothesis candidates from frozen experimental features
-    objective: >
-      Convert the accepted candidate_hypothesis_design columns from the frozen
-      FD_001 combined experimental snapshot into pre-declared hypothesis
-      candidates without running tests.
-    prompt_template: prompts/stage_feature_to_hypothesis_planning.md
-    inputs:
-      - feature_lab/FD_001_combined/experimental_feature_snapshot.csv
-      - feature_lab/FD_001_combined/experimental_feature_inventory.csv
-      - feature_lab/FD_001_combined/validation_summary.md
-      - feature_lab/FD_001_combined/next_step_recommendation.md
-      - research_loop/research_state.yaml
-      - hypothesis_registry/rewrite_queue.yaml
-      - feature_specs/
-    outputs:
-      - hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml
-      - feature_research/FD_001/feature_to_hypothesis_plan.md
-    allowed_files:
-      - hypothesis_registry/
-      - feature_research/FD_001/
-      - research_loop/
-      - prompts/
-    blocked_files:
-      - qqq_autoresearch/features.py
-      - qqq_autoresearch/data_sources.py
-      - qqq_autoresearch/config.py
-      - qqq_autoresearch/pipeline.py
-      - qqq_autoresearch/render.py
-      - run_dashboard.py
-      - outputs/
-    gates:
-      - no_hypothesis_tests
-      - no_new_test_implementation
-      - no_production_dashboard_logic_changes
-      - thresholds_predeclared_not_optimized
-      - exact_experimental_columns_only
-    validators:
-      - research_loop/validators/validate_no_protected_pr_diff.py
-      - research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_combined
-      - research_loop/validators/validate_hypothesis_plan.py --plan-yaml hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml --snapshot-dir feature_lab/FD_001_combined
-    completion_output_check: enforced_by_mark_task_result_completed_run_validators
-    human_approval_required: false
+    '
+  prompt_template: prompts/stage_feature_lab_review.md
+  inputs:
+  - feature_lab/FD_001_batch_B/run_feature_lab_fd001_batch_b.py
+  - feature_lab/FD_001_batch_B/validation_summary.md
+  - feature_lab/FD_001_batch_B/experimental_feature_snapshot.csv
+  - feature_lab/FD_001_batch_A_v2/validation_summary.md
+  - feature_lab/FD_001_batch_A_v2/experimental_feature_snapshot.csv
+  - outputs/qqq_r2_mmdi_v1_3_1_all_features_daily_wide.csv
+  outputs:
+  - feature_lab/FD_001_batch_B_v2/run_feature_lab_fd001_batch_b_v2.py
+  - feature_lab/FD_001_batch_B_v2/experimental_feature_snapshot.csv
+  - feature_lab/FD_001_batch_B_v2/experimental_feature_inventory.csv
+  - feature_lab/FD_001_batch_B_v2/coverage_summary.csv
+  - feature_lab/FD_001_batch_B_v2/validation_summary.md
+  - feature_lab/FD_001_batch_B_v2/feature_snapshot_manifest.yaml
+  - feature_lab/FD_001_combined/experimental_feature_snapshot.csv
+  - feature_lab/FD_001_combined/experimental_feature_inventory.csv
+  - feature_lab/FD_001_combined/coverage_summary.csv
+  - feature_lab/FD_001_combined/validation_summary.md
+  - feature_lab/FD_001_combined/feature_snapshot_manifest.yaml
+  - feature_lab/FD_001_combined/next_step_recommendation.md
+  allowed_files:
+  - feature_lab/FD_001_batch_B_v2/
+  - feature_lab/FD_001_combined/
+  - research_loop/
+  blocked_files:
+  - qqq_autoresearch/features.py
+  - qqq_autoresearch/data_sources.py
+  - qqq_autoresearch/config.py
+  - qqq_autoresearch/pipeline.py
+  - qqq_autoresearch/render.py
+  - run_dashboard.py
+  - outputs/
+  gates:
+  - no_hypothesis_tests
+  - no_production_dashboard_logic_changes
+  - no_production_feature_construction_changes
+  - use_existing_daily_wide_input_only
+  - no_future_target_or_future_drawdown_inputs
+  validators:
+  - research_loop/validators/validate_no_protected_pr_diff.py
+  - research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_batch_B_v2
+  - research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_combined
+  human_approval_required: false
+  completed_at_utc: '2026-07-01T06:45:51+00:00'
+  completion_evidence:
+  - feature_lab/FD_001_combined/validation_summary.md
+  - feature_lab/FD_001_combined/next_step_recommendation.md
+  created_from:
+  - feature_lab/FD_001_batch_B/validation_summary.md
+  - feature_lab/FD_001_batch_A_v2/validation_summary.md
+- task_id: FD_001_FEATURE_TO_HYPOTHESIS_PLANNING
+  status: completed
+  blocked_by:
+  - FD_001_BATCH_B_V2_QA_AND_COMBINED_SNAPSHOT
+  priority: 1
+  stage: FEATURE_TO_HYPOTHESIS_PLANNING
+  title: Plan FD_001-derived hypothesis candidates from frozen experimental features
+  objective: 'Convert the accepted candidate_hypothesis_design columns from the frozen
+    FD_001 combined experimental snapshot into pre-declared hypothesis candidates
+    without running tests.
+
+    '
+  prompt_template: prompts/stage_feature_to_hypothesis_planning.md
+  inputs:
+  - feature_lab/FD_001_combined/experimental_feature_snapshot.csv
+  - feature_lab/FD_001_combined/experimental_feature_inventory.csv
+  - feature_lab/FD_001_combined/validation_summary.md
+  - feature_lab/FD_001_combined/next_step_recommendation.md
+  - research_loop/research_state.yaml
+  - hypothesis_registry/rewrite_queue.yaml
+  - feature_specs/
+  outputs:
+  - hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml
+  - feature_research/FD_001/feature_to_hypothesis_plan.md
+  allowed_files:
+  - hypothesis_registry/
+  - feature_research/FD_001/
+  - research_loop/
+  - prompts/
+  blocked_files:
+  - qqq_autoresearch/features.py
+  - qqq_autoresearch/data_sources.py
+  - qqq_autoresearch/config.py
+  - qqq_autoresearch/pipeline.py
+  - qqq_autoresearch/render.py
+  - run_dashboard.py
+  - outputs/
+  gates:
+  - no_hypothesis_tests
+  - no_new_test_implementation
+  - no_production_dashboard_logic_changes
+  - thresholds_predeclared_not_optimized
+  - exact_experimental_columns_only
+  validators:
+  - research_loop/validators/validate_no_protected_pr_diff.py
+  - research_loop/validators/validate_feature_snapshot.py --snapshot-dir feature_lab/FD_001_combined
+  - research_loop/validators/validate_hypothesis_plan.py --plan-yaml hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml
+    --snapshot-dir feature_lab/FD_001_combined
+  completion_output_check: enforced_by_mark_task_result_completed_run_validators
+  human_approval_required: false
+  last_result_at_utc: '2026-07-01T09:24:27+00:00'
+  last_validator_report: research_loop/task_results/FD_001_FEATURE_TO_HYPOTHESIS_PLANNING/validator_report.yaml
+  last_validator_report_md: research_loop/task_results/FD_001_FEATURE_TO_HYPOTHESIS_PLANNING/validator_report.md
+- task_id: FD_001_HYPOTHESIS_VALIDATION
+  status: completed
+  blocked_by:
+  - FD_001_FEATURE_TO_HYPOTHESIS_PLANNING
+  priority: 1
+  stage: HYPOTHESIS_VALIDATION
+  title: Validate FD_001 hypothesis plan into concrete iteration_004_fd001 hypotheses
+  objective: Convert the FD_001 feature-to-hypothesis plan into concrete validated
+    research hypotheses without running tests.
+  inputs:
+  - hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml
+  - feature_lab/FD_001_combined/experimental_feature_snapshot.csv
+  - feature_lab/FD_001_combined/experimental_feature_inventory.csv
+  - hypothesis_registry/rejected_hypotheses.yaml
+  outputs:
+  - research_iterations/iteration_004_fd001/hypothesis_validation_report.csv
+  - research_iterations/iteration_004_fd001/hypothesis_validation_report.md
+  - research_iterations/iteration_004_fd001/hypotheses.yaml
+  allowed_files:
+  - research_iterations/iteration_004_fd001/
+  - research_loop/
+  blocked_files:
+  - qqq_autoresearch/features.py
+  - qqq_autoresearch/data_sources.py
+  - qqq_autoresearch/config.py
+  - qqq_autoresearch/pipeline.py
+  - qqq_autoresearch/render.py
+  - run_dashboard.py
+  - outputs/
+  validators:
+  - research_loop/validators/validate_no_protected_pr_diff.py
+  - research_loop/validators/validate_hypothesis_plan.py --plan-yaml hypothesis_registry/fd_001_feature_to_hypothesis_plan.yaml
+    --snapshot-dir feature_lab/FD_001_combined
+  - research_loop/validators/validate_task_outputs.py --task-id FD_001_HYPOTHESIS_VALIDATION
+  human_approval_required: false
+  last_result_at_utc: '2026-07-01T09:26:50+00:00'
+  last_validator_report: research_loop/task_results/FD_001_HYPOTHESIS_VALIDATION/validator_report.yaml
+  last_validator_report_md: research_loop/task_results/FD_001_HYPOTHESIS_VALIDATION/validator_report.md
+- task_id: FD_001_TEST_IMPLEMENTATION
+  status: completed
+  blocked_by:
+  - FD_001_HYPOTHESIS_VALIDATION
+  priority: 2
+  stage: TEST_IMPLEMENTATION
+  title: Implement iteration_004_fd001 research-only deterministic test runner
+  objective: Implement deterministic research-only triggers and the runner for validated
+    FD_001 hypotheses without running walk-forward tests.
+  inputs:
+  - outputs/qqq_r2_mmdi_v1_3_1_all_features_daily_wide.csv
+  - feature_lab/FD_001_combined/experimental_feature_snapshot.csv
+  - research_iterations/iteration_004_fd001/hypotheses.yaml
+  outputs:
+  - qqq_autoresearch/hypothesis_tests_iteration_004_fd001.py
+  - run_hypothesis_tests_iteration_004_fd001.py
+  allowed_files:
+  - qqq_autoresearch/hypothesis_tests_iteration_004_fd001.py
+  - run_hypothesis_tests_iteration_004_fd001.py
+  - research_iterations/iteration_004_fd001/
+  - research_loop/
+  blocked_files:
+  - qqq_autoresearch/features.py
+  - qqq_autoresearch/data_sources.py
+  - qqq_autoresearch/config.py
+  - qqq_autoresearch/pipeline.py
+  - qqq_autoresearch/render.py
+  - run_dashboard.py
+  - outputs/
+  validators:
+  - research_loop/validators/validate_no_protected_pr_diff.py
+  - research_loop/validators/validate_task_outputs.py --task-id FD_001_TEST_IMPLEMENTATION
+  human_approval_required: false
+  unblocked_at: '2026-07-01T09:26:50+00:00'
+  last_result_at_utc: '2026-07-01T09:28:59+00:00'
+  last_validator_report: research_loop/task_results/FD_001_TEST_IMPLEMENTATION/validator_report.yaml
+  last_validator_report_md: research_loop/task_results/FD_001_TEST_IMPLEMENTATION/validator_report.md
+- task_id: FD_001_WALK_FORWARD_TEST
+  status: completed
+  blocked_by:
+  - FD_001_TEST_IMPLEMENTATION
+  priority: 3
+  stage: WALK_FORWARD_TEST
+  title: Run iteration_004_fd001 walk-forward research tests
+  objective: Run the approved research-only walk-forward tests and write deterministic
+    evidence outputs.
+  inputs:
+  - run_hypothesis_tests_iteration_004_fd001.py
+  - qqq_autoresearch/hypothesis_tests_iteration_004_fd001.py
+  - outputs/qqq_r2_mmdi_v1_3_1_all_features_daily_wide.csv
+  - feature_lab/FD_001_combined/experimental_feature_snapshot.csv
+  outputs:
+  - research_iterations/iteration_004_fd001/tests/hypothesis_test_summary.csv
+  - research_iterations/iteration_004_fd001/tests/hypothesis_test_folds.csv
+  - research_iterations/iteration_004_fd001/tests/hypothesis_test_daily_signals.csv
+  - research_iterations/iteration_004_fd001/tests/hypothesis_test_events.csv
+  - research_iterations/iteration_004_fd001/tests/hypothesis_test_report.html
+  allowed_files:
+  - research_iterations/iteration_004_fd001/
+  - qqq_autoresearch/hypothesis_tests_iteration_004_fd001.py
+  - run_hypothesis_tests_iteration_004_fd001.py
+  - research_loop/
+  blocked_files:
+  - qqq_autoresearch/features.py
+  - qqq_autoresearch/data_sources.py
+  - qqq_autoresearch/config.py
+  - qqq_autoresearch/pipeline.py
+  - qqq_autoresearch/render.py
+  - run_dashboard.py
+  - dashboard_candidates/
+  validators:
+  - research_loop/validators/validate_no_protected_pr_diff.py
+  - research_loop/validators/validate_task_outputs.py --task-id FD_001_WALK_FORWARD_TEST
+  human_approval_required: false
+  unblocked_at: '2026-07-01T09:28:59+00:00'
+  last_result_at_utc: '2026-07-01T09:29:21+00:00'
+  last_validator_report: research_loop/task_results/FD_001_WALK_FORWARD_TEST/validator_report.yaml
+  last_validator_report_md: research_loop/task_results/FD_001_WALK_FORWARD_TEST/validator_report.md
+- task_id: FD_001_EVIDENCE_ANALYSIS
+  status: completed
+  blocked_by:
+  - FD_001_WALK_FORWARD_TEST
+  priority: 4
+  stage: EVIDENCE_ANALYSIS
+  title: Analyze iteration_004_fd001 evidence
+  objective: Analyze lift, burden, event coverage, false calm, fold stability, lead
+    time, and dashboard relevance for FD_001 hypotheses.
+  inputs:
+  - research_iterations/iteration_004_fd001/tests/hypothesis_test_summary.csv
+  - research_iterations/iteration_004_fd001/tests/hypothesis_test_folds.csv
+  - research_iterations/iteration_004_fd001/tests/hypothesis_test_daily_signals.csv
+  - research_iterations/iteration_004_fd001/tests/hypothesis_test_events.csv
+  outputs:
+  - research_iterations/iteration_004_fd001/analysis.md
+  - research_iterations/iteration_004_fd001/decision_log.md
+  - research_iterations/iteration_004_fd001/decision_log.yaml
+  - research_iterations/iteration_004_fd001/next_iteration_plan.md
+  - research_iterations/iteration_004_fd001/artifact_manifest.yaml
+  - research_iterations/iteration_004_fd001/closed_loop_review.md
+  allowed_files:
+  - research_iterations/iteration_004_fd001/
+  - research_loop/
+  blocked_files:
+  - qqq_autoresearch/features.py
+  - qqq_autoresearch/data_sources.py
+  - qqq_autoresearch/config.py
+  - qqq_autoresearch/pipeline.py
+  - qqq_autoresearch/render.py
+  - run_dashboard.py
+  validators:
+  - research_loop/validators/validate_no_protected_pr_diff.py
+  - research_loop/validators/validate_task_outputs.py --task-id FD_001_EVIDENCE_ANALYSIS
+  human_approval_required: false
+  unblocked_at: '2026-07-01T09:29:21+00:00'
+  last_result_at_utc: '2026-07-01T09:31:01+00:00'
+  last_validator_report: research_loop/task_results/FD_001_EVIDENCE_ANALYSIS/validator_report.yaml
+  last_validator_report_md: research_loop/task_results/FD_001_EVIDENCE_ANALYSIS/validator_report.md
+- task_id: FD_001_REGISTRY_UPDATE
+  status: completed
+  blocked_by:
+  - FD_001_EVIDENCE_ANALYSIS
+  priority: 5
+  stage: REGISTRY_UPDATE
+  title: Update registries from iteration_004_fd001 evidence
+  objective: Record accepted, rejected, and rewrite decisions from FD_001 evidence
+    while preserving lineage and prior active hypotheses.
+  inputs:
+  - research_iterations/iteration_004_fd001/analysis.md
+  - research_iterations/iteration_004_fd001/decision_log.yaml
+  - research_loop/research_state.yaml
+  outputs:
+  - hypothesis_registry/active_hypotheses.yaml
+  - hypothesis_registry/rejected_hypotheses.yaml
+  - hypothesis_registry/rewrite_queue.yaml
+  - research_loop/research_state.yaml
+  - research_loop/task_queue.yaml
+  allowed_files:
+  - hypothesis_registry/
+  - research_loop/
+  - research_iterations/iteration_004_fd001/
+  blocked_files:
+  - qqq_autoresearch/features.py
+  - qqq_autoresearch/data_sources.py
+  - qqq_autoresearch/config.py
+  - qqq_autoresearch/pipeline.py
+  - qqq_autoresearch/render.py
+  - run_dashboard.py
+  validators:
+  - research_loop/validators/validate_no_protected_pr_diff.py
+  - research_loop/validators/validate_task_outputs.py --task-id FD_001_REGISTRY_UPDATE
+  human_approval_required: false
+  unblocked_at: '2026-07-01T09:31:01+00:00'
+  last_result_at_utc: '2026-07-01T09:32:47+00:00'
+  last_validator_report: research_loop/task_results/FD_001_REGISTRY_UPDATE/validator_report.yaml
+  last_validator_report_md: research_loop/task_results/FD_001_REGISTRY_UPDATE/validator_report.md
+- task_id: FD_001_DASHBOARD_CANDIDATE_DECISION
+  status: completed
+  blocked_by:
+  - FD_001_REGISTRY_UPDATE
+  priority: 6
+  stage: DASHBOARD_CANDIDATE
+  title: Decide whether iteration_004_fd001 qualifies for a shadow dashboard candidate
+  objective: Create a research-only dashboard candidate decision without modifying
+    production dashboard files.
+  inputs:
+  - research_iterations/iteration_004_fd001/analysis.md
+  - research_iterations/iteration_004_fd001/decision_log.yaml
+  - hypothesis_registry/active_hypotheses.yaml
+  outputs:
+  - dashboard_candidates/no_candidate_from_iteration_004_fd001.md
+  allowed_files:
+  - dashboard_candidates/
+  - research_loop/
+  - research_iterations/iteration_004_fd001/
+  blocked_files:
+  - qqq_autoresearch/features.py
+  - qqq_autoresearch/data_sources.py
+  - qqq_autoresearch/config.py
+  - qqq_autoresearch/pipeline.py
+  - qqq_autoresearch/render.py
+  - run_dashboard.py
+  validators:
+  - research_loop/validators/validate_no_protected_pr_diff.py
+  - research_loop/validators/validate_task_outputs.py --task-id FD_001_DASHBOARD_CANDIDATE_DECISION
+  human_approval_required: false
+  unblocked_at: '2026-07-01T09:32:47+00:00'
+  last_result_at_utc: '2026-07-01T09:33:42+00:00'
+  last_validator_report: research_loop/task_results/FD_001_DASHBOARD_CANDIDATE_DECISION/validator_report.yaml
+  last_validator_report_md: research_loop/task_results/FD_001_DASHBOARD_CANDIDATE_DECISION/validator_report.md
